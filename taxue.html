@@ -1,0 +1,2029 @@
+<html lang="zh-CN" style="--cell-size: 82px; --cell-gap: 8px;"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>獭学</title>
+    <style>
+        :root {
+            --bg-color: #f0e6d6;
+            --cell-color: #d1c4b2;
+            --accent-color: #8b5e3c;
+        }
+
+        body {
+            font-family: sans-serif;
+            background: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 12px 8px;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none; /* prevent scroll while dragging */
+            overflow-x: hidden;
+        }
+
+        /* 顶部状态栏 */
+        #status-bar {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            background: white;
+            padding: 8px 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-sizing: border-box;
+        }
+        .stat { text-align: center; }
+        .stat-val { font-weight: bold; color: var(--accent-color); font-size: 1.1em; }
+
+        /* 三列游戏区域 */
+        #game-area {
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        /* 棋盘 */
+        #board {
+            display: grid;
+            gap: var(--cell-gap, 8px);
+            background: #bbada0;
+            padding: var(--cell-gap, 8px);
+            border-radius: 8px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+        }
+
+        /* 格子 */
+        .cell {
+            width: var(--cell-size, 72px);
+            height: var(--cell-size, 72px);
+            background: var(--cell-color);
+            border-radius: 5px;
+            display: flex; justify-content: center; align-items: center;
+            position: relative;
+            cursor: pointer;
+        }
+        .cell.drag-over { outline: 2px dashed #e74c3c; }
+
+        /* 物品实体 */
+        .item {
+            width: calc(var(--cell-size, 72px) - 8px);
+            height: calc(var(--cell-size, 72px) - 8px);
+            border-radius: 5px;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            font-size: 12px; text-align: center;
+            transition: transform 0.1s;
+            position: absolute;
+            pointer-events: none;
+            gap: 1px;
+            padding-bottom: 12px;
+            box-sizing: border-box;
+        }
+        .cell:not(:has(.generator)) .item {
+            padding-bottom: 0;
+        }
+        .item img {
+            width: calc(var(--cell-size, 72px) * 0.58);
+            height: calc(var(--cell-size, 72px) * 0.58);
+            object-fit: contain;
+        }
+        .item .item-icon-emoji {
+            font-size: calc(var(--cell-size, 72px) * 0.38);
+            line-height: 1;
+        }
+        .item .item-label {
+            font-size: calc(var(--cell-size, 72px) * 0.10);
+            line-height: 1.1;
+            color: #444;
+        }
+
+        /* 生成器 */
+        .generator {
+            background: #ffcf4b;
+            border: 3px solid #f39c12;
+            font-weight: bold;
+            overflow: hidden;
+        }
+
+        /* 生成器等级角标 */
+        .gen-lv-badge {
+            position: absolute;
+            bottom: 2px;
+            left: 0; right: 0;
+            text-align: center;
+            font-size: 8px;
+            font-weight: bold;
+            color: white;
+            background: rgba(0,0,0,0.45);
+            padding: 1px 0;
+            pointer-events: none;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        .gen-lv-0 {
+            background: rgba(0,0,0,0.2);
+            color: #555;
+        }
+
+        /* 提交栏 */
+        #submit-bar {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            width: 96px;
+            flex-shrink: 0;
+        }
+        .submit-slot {
+            background: white;
+            border-radius: 8px;
+            padding: 7px 5px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border: 2px solid transparent;
+            transition: border-color 0.2s;
+        }
+        .submit-slot.has-item {
+            border-color: #f39c12;
+        }
+        .submit-slot .s-icon { font-size: 26px; line-height: 1; }
+        .submit-slot .s-icon img { width: 32px; height: 32px; object-fit: contain; }
+        .submit-slot .s-name { font-size: 9px; color: #888; margin: 2px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .submit-slot .s-count {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+        .submit-slot .s-hint { font-size: 8px; color: #bbb; }
+        /* 侧栏标题标签 */
+        .side-label {
+            font-size: 10px;
+            font-weight: bold;
+            color: #999;
+            text-align: center;
+            letter-spacing: 1px;
+            padding: 4px 0 2px;
+        }
+
+        /* 六级物品高亮可提交 */
+        .cell.submittable:hover .item {
+            transform: scale(1.08);
+            outline: 2px solid #f39c12;
+            border-radius: 5px;
+        }
+        .submit-indicator {
+            position: absolute;
+            top: 3px; right: 3px;
+            background: #f39c12;
+            color: white;
+            font-size: 9px;
+            font-weight: bold;
+            padding: 1px 4px;
+            border-radius: 3px;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        /* 集齐特效 */
+        @keyframes set-flash {
+            0%   { background: #f0e6d6; }
+            30%  { background: #fffde7; }
+            100% { background: #f0e6d6; }
+        }
+        body.set-complete { animation: set-flash 0.6s ease; }
+
+        /* 胜利弹窗 */
+        #victory-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 20px;
+        }
+        #victory-overlay.show { display: flex; }
+        #victory-overlay img {
+            width: 200px; height: 200px;
+            object-fit: contain;
+            animation: victory-bounce 0.8s ease infinite alternate;
+        }
+        #victory-overlay .victory-text {
+            color: #fff;
+            font-size: 28px;
+            font-weight: bold;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+        }
+        #victory-overlay .victory-sub {
+            color: #ffd700;
+            font-size: 16px;
+        }
+        #victory-overlay button {
+            margin-top: 10px;
+            padding: 10px 30px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            background: #f39c12;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        @keyframes victory-bounce {
+            from { transform: scale(1) rotate(-3deg); }
+            to   { transform: scale(1.1) rotate(3deg); }
+        }
+
+        /* ── 订单系统 ── */
+        #order-bar {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 130px;
+            flex-shrink: 0;
+        }
+        .order-card {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border: 2px solid #0f3460;
+            border-radius: 10px;
+            padding: 10px 8px;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+            position: relative;
+            overflow: hidden;
+        }
+        .order-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+            border-color: #e94560;
+        }
+        .order-card.fulfillable {
+            border-color: #2ecc71;
+            box-shadow: 0 0 10px rgba(46,204,113,0.4);
+        }
+        .order-card.fulfillable:hover {
+            box-shadow: 0 6px 18px rgba(46,204,113,0.55);
+            border-color: #27ae60;
+        }
+        .order-card-title {
+            font-size: 9px;
+            font-weight: bold;
+            color: #e94560;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+        .order-items {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .order-item-row {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(255,255,255,0.07);
+            border-radius: 5px;
+            padding: 3px 5px;
+        }
+        .order-item-icon {
+            font-size: 16px;
+            line-height: 1;
+            width: 20px;
+            text-align: center;
+        }
+        .order-item-icon img { width: 18px; height: 18px; object-fit: contain; }
+        .order-item-desc {
+            font-size: 10px;
+            color: #ddd;
+            flex: 1;
+        }
+        .order-item-check {
+            font-size: 12px;
+            color: #2ecc71;
+            display: none;
+        }
+        .order-card.fulfillable .order-item-check { display: block; }
+        .order-reward {
+            margin-top: 7px;
+            font-size: 10px;
+            color: #ffd700;
+            font-weight: bold;
+            text-align: right;
+        }
+        .order-fulfill-hint {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            background: #2ecc71;
+            color: white;
+            font-size: 9px;
+            font-weight: bold;
+            text-align: center;
+            padding: 2px 0;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .order-card.fulfillable:hover .order-fulfill-hint { opacity: 1; }
+
+        /* 触摸拖拽幽灵元素 */
+        #touch-ghost {
+            position: fixed;
+            pointer-events: none;
+            z-index: 9000;
+            opacity: 0.8;
+            transform: translate(-50%, -50%) scale(1.15);
+            transition: none;
+            display: none;
+        }
+
+        /* 拖拽吸附高亮 */
+        .cell.snap-target {
+            background: #c8e6c9;
+            outline: 2px solid #4caf50;
+            transition: background 0.15s, outline 0.15s;
+        }
+        .cell.snap-target-merge {
+            background: #fff9c4;
+            outline: 2px solid #f39c12;
+            transition: background 0.15s, outline 0.15s;
+        }
+
+        /* BGM 静音按钮 */
+        #bgm-toggle {
+            position: fixed;
+            bottom: 18px;
+            left: 18px;
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255,255,255,0.85);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 500;
+            display: flex; align-items: center; justify-content: center;
+            transition: transform 0.15s;
+        }
+        #bgm-toggle:hover { transform: scale(1.1); }
+
+        /* 底部提示 */
+        #controls { margin-top: 8px; }
+        #controls p { font-size: 11px; color: #999; margin: 0; }
+
+        /* ── 开发者面板 ── */
+        #dev-toggle {
+            position: fixed;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #c0392b;
+            color: white;
+            border: none;
+            padding: 12px 6px;
+            cursor: pointer;
+            writing-mode: vertical-rl;
+            letter-spacing: 3px;
+            font-size: 13px;
+            font-weight: bold;
+            border-radius: 6px 0 0 6px;
+            z-index: 1001;
+            box-shadow: -2px 0 8px rgba(0,0,0,0.25);
+        }
+        #dev-toggle:hover { background: #e74c3c; }
+
+        #dev-panel {
+            position: fixed;
+            right: -420px;
+            top: 0;
+            width: 400px;
+            height: 100vh;
+            background: #16213e;
+            color: #d0d0d0;
+            padding: 0;
+            box-shadow: -6px 0 24px rgba(0,0,0,0.5);
+            overflow-y: auto;
+            transition: right 0.3s ease;
+            z-index: 1000;
+            font-size: 13px;
+        }
+        #dev-panel.open { right: 0; }
+
+        .dp-header {
+            background: #0f3460;
+            padding: 16px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #e94560;
+            border-bottom: 1px solid #1a4a7a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .dp-close {
+            background: none; border: none;
+            color: #aaa; font-size: 20px;
+            cursor: pointer; padding: 0;
+        }
+        .dp-close:hover { color: white; }
+
+        .dp-section {
+            padding: 14px 20px;
+            border-bottom: 1px solid #2a3550;
+        }
+        .dp-section-title {
+            font-weight: bold;
+            color: #e94560;
+            margin-bottom: 10px;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .dp-field {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            gap: 8px;
+        }
+        .dp-field label {
+            width: 130px;
+            flex-shrink: 0;
+            color: #aaa;
+        }
+        .dp-field input {
+            flex: 1;
+            background: #1a2a4a;
+            border: 1px solid #3a4a6a;
+            color: #e0e0e0;
+            padding: 5px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        .dp-field input:focus {
+            outline: none;
+            border-color: #e94560;
+        }
+
+        .dp-chain-title {
+            font-weight: bold;
+            color: #7eb8e5;
+            margin: 12px 0 6px;
+            font-size: 12px;
+        }
+        .dp-sub-title {
+            color: #f39c12;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 4px 0 4px;
+            opacity: 0.8;
+        }
+        .dp-item-row {
+            display: grid;
+            grid-template-columns: 28px 1fr 1fr;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 5px;
+        }
+        .dp-item-row .lv {
+            color: #888;
+            font-size: 11px;
+            text-align: center;
+        }
+        .dp-item-row input {
+            background: #1a2a4a;
+            border: 1px solid #3a4a6a;
+            color: #e0e0e0;
+            padding: 4px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .dp-item-row input:focus {
+            outline: none;
+            border-color: #e94560;
+        }
+        .dp-col-headers {
+            display: grid;
+            grid-template-columns: 28px 1fr 1fr;
+            gap: 6px;
+            margin-bottom: 4px;
+        }
+        .dp-col-headers span {
+            color: #666;
+            font-size: 10px;
+            text-align: center;
+        }
+
+        #dp-apply {
+            display: block;
+            width: calc(100% - 40px);
+            margin: 16px 20px;
+            padding: 12px;
+            background: #e94560;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            letter-spacing: 1px;
+        }
+        #dp-apply:hover { background: #c0392b; }
+
+        .dp-hint {
+            padding: 0 20px 16px;
+            color: #666;
+            font-size: 11px;
+            line-height: 1.6;
+        }
+
+        /* toast */
+        #toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: #2ecc71;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 13px;
+            opacity: 0;
+            transition: opacity 0.3s, transform 0.3s;
+            z-index: 2000;
+            pointer-events: none;
+        }
+        #toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+    </style>
+</head>
+<body>
+
+<div id="status-bar">
+    <div class="stat">电量: <span id="energy-val" class="stat-val">999</span> / <span id="max-energy">999</span></div>
+    <div class="stat">胜利点数: <span id="coin-val" class="stat-val">0</span></div>
+</div>
+
+<div id="game-area">
+<div id="order-bar"><div class="side-label">巴拉订单</div><div class="order-card"><div class="order-card-title">巴拉订单 #1</div><div class="order-items"><div class="order-item-row">
+                <div class="order-item-icon"><img src="https://i.ibb.co/RZvd6GH/j3.png" alt="item" onerror="this.style.opacity='0.3'"></div>
+                <div class="order-item-desc">Lv.3 花卷</div>
+                <div class="order-item-check">✓</div>
+            </div><div class="order-item-row">
+                <div class="order-item-icon"><img src="https://i.ibb.co/NgVGHp4C/image.png" alt="item" onerror="this.style.opacity='0.3'"></div>
+                <div class="order-item-desc">Lv.4 巴四</div>
+                <div class="order-item-check">✓</div>
+            </div></div><div class="order-reward">奖励 +1 胜利点数</div><div class="order-fulfill-hint">点击完成订单</div></div><div class="order-card"><div class="order-card-title">巴拉订单 #2</div><div class="order-items"><div class="order-item-row">
+                <div class="order-item-icon"><img src="https://i.ibb.co/cchjvYws/image.png" alt="item" onerror="this.style.opacity='0.3'"></div>
+                <div class="order-item-desc">Lv.3 獭三</div>
+                <div class="order-item-check">✓</div>
+            </div><div class="order-item-row">
+                <div class="order-item-icon"><img src="https://i.ibb.co/NgVGHp4C/image.png" alt="item" onerror="this.style.opacity='0.3'"></div>
+                <div class="order-item-desc">Lv.4 巴四</div>
+                <div class="order-item-check">✓</div>
+            </div></div><div class="order-reward">奖励 +1 胜利点数</div><div class="order-fulfill-hint">点击完成订单</div></div><div class="order-card"><div class="order-card-title">巴拉订单 #3</div><div class="order-items"><div class="order-item-row">
+                <div class="order-item-icon"><img src="https://i.ibb.co/DHXrKG0j/z4.png" alt="item" onerror="this.style.opacity='0.3'"></div>
+                <div class="order-item-desc">Lv.4 芝士</div>
+                <div class="order-item-check">✓</div>
+            </div><div class="order-item-row">
+                <div class="order-item-icon"><img src="https://i.ibb.co/1fGSG05z/z3.png" alt="item" onerror="this.style.opacity='0.3'"></div>
+                <div class="order-item-desc">Lv.3 芝小猪</div>
+                <div class="order-item-check">✓</div>
+            </div></div><div class="order-reward">奖励 +1 胜利点数</div><div class="order-fulfill-hint">点击完成订单</div></div></div>
+<div id="board" style="grid-template-columns: repeat(7, 82px);"><div class="cell" data-index="0" draggable="true"><div class="item generator" style="background-color: rgb(255, 249, 196);"><img src="https://i.ibb.co/67Rxrg9F/jc1.png" alt="item" onerror="this.style.opacity='0.3'"><div class="item-label">新卷</div><div class="gen-lv-badge gen-lv-0">Lv.0</div></div></div><div class="cell" data-index="1" draggable="true"></div><div class="cell" data-index="2" draggable="true"><div class="item" style="background-color: rgb(252, 228, 236);">
+                    <img src="https://i.ibb.co/5Wy05ZqM/image.png" alt="item" onerror="this.style.opacity='0.3'">
+                    <div class="item-label">Lv.1<br>獭一</div>
+                </div></div><div class="cell" data-index="3" draggable="true"><div class="item" style="background-color: rgb(255, 248, 225);">
+                    <img src="https://i.ibb.co/RGPCS296/image.png" alt="item" onerror="this.style.opacity='0.3'">
+                    <div class="item-label">Lv.1<br>巴一</div>
+                </div></div><div class="cell" data-index="4" draggable="true"></div><div class="cell" data-index="5" draggable="true"></div><div class="cell" data-index="6" draggable="true"><div class="item generator" style="background-color: rgb(245, 245, 245);"><img src="https://i.ibb.co/sdvXyK46/zc1.png" alt="item" onerror="this.style.opacity='0.3'"><div class="item-label">猪床</div><div class="gen-lv-badge gen-lv-0">Lv.0</div></div></div><div class="cell" data-index="7" draggable="true"></div><div class="cell" data-index="8" draggable="true"><div class="item" style="background-color: rgb(224, 224, 224);">
+                    <img src="https://i.ibb.co/rRTZ5SFX/z2.png" alt="item" onerror="this.style.opacity='0.3'">
+                    <div class="item-label">Lv.2<br>芝芝宝</div>
+                </div></div><div class="cell" data-index="9" draggable="true"></div><div class="cell" data-index="10" draggable="true"><div class="item" style="background-color: rgb(252, 228, 236);">
+                    <img src="https://i.ibb.co/5Wy05ZqM/image.png" alt="item" onerror="this.style.opacity='0.3'">
+                    <div class="item-label">Lv.1<br>獭一</div>
+                </div></div><div class="cell" data-index="11" draggable="true"></div><div class="cell" data-index="12" draggable="true"><div class="item" style="background-color: rgb(232, 245, 233);">
+                    <img src="https://i.ibb.co/Z6b5T6Kq/j1.png" alt="item" onerror="this.style.opacity='0.3'">
+                    <div class="item-label">Lv.1<br>花卷宝宝</div>
+                </div></div><div class="cell" data-index="13" draggable="true"><div class="item" style="background-color: rgb(248, 187, 208);">
+                    <img src="https://i.ibb.co/6Jc9LT1L/image.png" alt="item" onerror="this.style.opacity='0.3'">
+                    <div class="item-label">Lv.2<br>獭二</div>
+                </div></div><div class="cell" data-index="14" draggable="true"></div><div class="cell" data-index="15" draggable="true"></div><div class="cell" data-index="16" draggable="true"><div class="item" style="background-color: rgb(200, 230, 201);">
+                    <img src="https://i.ibb.co/tpjXHh23/j2.png" alt="item" onerror="this.style.opacity='0.3'">
+                    <div class="item-label">Lv.2<br>小花卷</div>
+                </div></div><div class="cell" data-index="17" draggable="true"><div class="item" style="background-color: rgb(255, 248, 225);">
+                    <img src="https://i.ibb.co/RGPCS296/image.png" alt="item" onerror="this.style.opacity='0.3'">
+                    <div class="item-label">Lv.1<br>巴一</div>
+                </div></div><div class="cell" data-index="18" draggable="true"><div class="item" style="background-color: rgb(255, 224, 130);">
+                    <img src="https://i.ibb.co/7BgNtkg/image.png" alt="item" onerror="this.style.opacity='0.3'">
+                    <div class="item-label">Lv.3<br>巴三</div>
+                </div></div><div class="cell" data-index="19" draggable="true"></div><div class="cell" data-index="20" draggable="true"></div><div class="cell" data-index="21" draggable="true"><div class="item" style="background-color: rgb(255, 248, 225);">
+                    <img src="https://i.ibb.co/RGPCS296/image.png" alt="item" onerror="this.style.opacity='0.3'">
+                    <div class="item-label">Lv.1<br>巴一</div>
+                </div></div><div class="cell" data-index="22" draggable="true"></div><div class="cell" data-index="23" draggable="true"></div><div class="cell" data-index="24" draggable="true"></div><div class="cell" data-index="25" draggable="true"></div><div class="cell" data-index="26" draggable="true"></div><div class="cell" data-index="27" draggable="true"></div><div class="cell" data-index="28" draggable="true"></div><div class="cell" data-index="29" draggable="true"></div><div class="cell" data-index="30" draggable="true"></div><div class="cell" data-index="31" draggable="true"></div><div class="cell" data-index="32" draggable="true"></div><div class="cell" data-index="33" draggable="true"><div class="item" style="background-color: rgb(224, 224, 224);">
+                    <img src="https://i.ibb.co/rRTZ5SFX/z2.png" alt="item" onerror="this.style.opacity='0.3'">
+                    <div class="item-label">Lv.2<br>芝芝宝</div>
+                </div></div><div class="cell" data-index="34" draggable="true"></div><div class="cell" data-index="35" draggable="true"><div class="item" style="background-color: rgb(255, 248, 225);">
+                    <img src="https://i.ibb.co/RGPCS296/image.png" alt="item" onerror="this.style.opacity='0.3'">
+                    <div class="item-label">Lv.1<br>巴一</div>
+                </div></div><div class="cell" data-index="36" draggable="true"></div><div class="cell" data-index="37" draggable="true"></div><div class="cell" data-index="38" draggable="true"></div><div class="cell" data-index="39" draggable="true"></div><div class="cell" data-index="40" draggable="true"></div><div class="cell" data-index="41" draggable="true"></div><div class="cell" data-index="42" draggable="true"><div class="item generator" style="background-color: rgb(252, 228, 236);"><img src="https://i.ibb.co/sJ69Xqyx/image.png" alt="item" onerror="this.style.opacity='0.3'"><div class="item-label">寻獭</div><div class="gen-lv-badge gen-lv-0">Lv.0</div></div></div><div class="cell" data-index="43" draggable="true"></div><div class="cell" data-index="44" draggable="true"></div><div class="cell" data-index="45" draggable="true"></div><div class="cell" data-index="46" draggable="true"></div><div class="cell" data-index="47" draggable="true"><div class="item" style="background-color: rgb(232, 245, 233);">
+                    <img src="https://i.ibb.co/Z6b5T6Kq/j1.png" alt="item" onerror="this.style.opacity='0.3'">
+                    <div class="item-label">Lv.1<br>花卷宝宝</div>
+                </div></div><div class="cell" data-index="48" draggable="true"><div class="item generator" style="background-color: rgb(255, 248, 225);"><img src="https://i.ibb.co/CpQ312WJ/image.png" alt="item" onerror="this.style.opacity='0.3'"><div class="item-label">芭乐吉</div><div class="gen-lv-badge gen-lv-0">Lv.0</div></div></div></div>
+<div id="submit-bar"><div class="side-label">六级提交</div><div class="submit-slot">
+                <div class="s-icon"><img src="https://i.ibb.co/rNKDNRp/j6.png" alt="item" onerror="this.style.opacity='0.3'"></div>
+                <div class="s-name">太阳花卷</div>
+                <div class="s-count">0</div>
+                <div class="s-hint">已提交</div>
+            </div><div class="submit-slot">
+                <div class="s-icon"><img src="https://i.ibb.co/zhc4k1V2/z6.png" alt="item" onerror="this.style.opacity='0.3'"></div>
+                <div class="s-name">芝大猪</div>
+                <div class="s-count">0</div>
+                <div class="s-hint">已提交</div>
+            </div><div class="submit-slot">
+                <div class="s-icon"><img src="https://i.ibb.co/s9VMc00C/image.png" alt="item" onerror="this.style.opacity='0.3'"></div>
+                <div class="s-name">獭六</div>
+                <div class="s-count">0</div>
+                <div class="s-hint">已提交</div>
+            </div><div class="submit-slot">
+                <div class="s-icon"><img src="https://i.ibb.co/k2RbBprZ/image.png" alt="item" onerror="this.style.opacity='0.3'"></div>
+                <div class="s-name">巴六</div>
+                <div class="s-count">0</div>
+                <div class="s-hint">已提交</div>
+            </div></div>
+</div><!-- /#game-area -->
+
+<div id="controls">
+    <p>操作：点击【生成器】消耗电量，拖拽相同等级物品合成；六级物品可点击提交，集齐四种六级物品 +1 胜利点数。</p>
+</div>
+
+<!-- BGM 静音切换按钮 -->
+<button id="bgm-toggle" title="点击静音背景音乐">🎵</button>
+
+<!-- 开发者面板触发按钮 -->
+<button id="dev-toggle" title="开发者面板">开发者面板</button>
+
+<!-- 开发者面板 -->
+<div id="dev-panel" class="open">
+    <div class="dp-header">
+        <span>开发者后台</span>
+        <button class="dp-close" id="dp-close">✕</button>
+    </div>
+
+    <div class="dp-section">
+        <div class="dp-section-title">基础规则</div>
+        <div class="dp-field">
+            <label>初始电量</label>
+            <input type="number" id="dp-initialEnergy" min="0">
+        </div>
+        <div class="dp-field">
+            <label>电量上限</label>
+            <input type="number" id="dp-maxEnergy" min="1">
+        </div>
+        <div class="dp-field">
+            <label>恢复间隔 (毫秒)</label>
+            <input type="number" id="dp-energyRecoverRate" min="500" step="500">
+        </div>
+        <div class="dp-field">
+            <label>点击电量消耗</label>
+            <input type="number" id="dp-energyCostPerClick" min="1">
+        </div>
+        <div class="dp-field">
+            <label>合成音效 URL</label>
+            <input type="text" id="dp-mergeSound" placeholder="https://... 或 ./audio/merge.ogg">
+        </div>
+        <div class="dp-field">
+            <label>订单完成音效 URL</label>
+            <input type="text" id="dp-orderSound" placeholder="https://... 或 ./audio/order.ogg">
+        </div>
+        <div class="dp-field">
+            <label>背景音乐 URL</label>
+            <input type="text" id="dp-bgmUrl" placeholder="https://... 或 ./audio/bgm.ogg">
+        </div>
+        <div class="dp-field">
+            <label>背景音乐音量 (0.0~1.0)</label>
+            <input type="number" id="dp-bgmVolume" min="0" max="1" step="0.05">
+        </div>
+    </div>
+
+    <div class="dp-section">
+        <div class="dp-section-title">胜利条件</div>
+        <div class="dp-field">
+            <label>目标胜利点数</label>
+            <input type="number" id="dp-victoryTarget" min="1">
+        </div>
+        <div class="dp-field">
+            <label>胜利图片 URL</label>
+            <input type="text" id="dp-victoryImage" placeholder="https://... 或 ./img/cake.png">
+        </div>
+        <div class="dp-field">
+            <label>胜利音效 URL</label>
+            <input type="text" id="dp-victorySound" placeholder="https://... 或 ./audio/win.ogg">
+        </div>
+    </div>
+
+    <div class="dp-section">
+        <div class="dp-section-title">链条 &amp; 物品配置</div>
+        <div id="dp-chains-container"><div style="margin-bottom: 14px;"><div class="dp-chain-title">植物类 (plant)</div><div class="dp-item-row" style="grid-template-columns: 1fr;"><div class="dp-sub-title" style="margin: 0px 0px 2px;">生成器点击音效</div><input type="text" placeholder="https://... 或 ./audio/spawn.ogg" data-chain="plant" data-field="spawnSound" data-section="chainRoot"></div><div class="dp-sub-title">生成器等级素材 (Lv.0~3)</div><div class="dp-col-headers"><span>等级</span><span>名称/标签</span><span>图标 / 图片路径</span></div><div class="dp-item-row"><div class="lv">G0</div><input type="text" placeholder="生成器名称" data-chain="plant" data-idx="0" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="plant" data-idx="0" data-field="icon" data-section="generatorLevels"></div><div class="dp-item-row"><div class="lv">G1</div><input type="text" placeholder="生成器名称" data-chain="plant" data-idx="1" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="plant" data-idx="1" data-field="icon" data-section="generatorLevels"></div><div class="dp-item-row"><div class="lv">G2</div><input type="text" placeholder="生成器名称" data-chain="plant" data-idx="2" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="plant" data-idx="2" data-field="icon" data-section="generatorLevels"></div><div class="dp-item-row"><div class="lv">G3</div><input type="text" placeholder="生成器名称" data-chain="plant" data-idx="3" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="plant" data-idx="3" data-field="icon" data-section="generatorLevels"></div><div class="dp-sub-title" style="margin-top: 8px;">合成链物品 (Lv.1~6)</div><div class="dp-col-headers"><span>等级</span><span>物品名称</span><span>图标 / 图片路径</span></div><div class="dp-item-row"><div class="lv">Lv1</div><input type="text" placeholder="物品名称" data-chain="plant" data-idx="0" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="plant" data-idx="0" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv2</div><input type="text" placeholder="物品名称" data-chain="plant" data-idx="1" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="plant" data-idx="1" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv3</div><input type="text" placeholder="物品名称" data-chain="plant" data-idx="2" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="plant" data-idx="2" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv4</div><input type="text" placeholder="物品名称" data-chain="plant" data-idx="3" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="plant" data-idx="3" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv5</div><input type="text" placeholder="物品名称" data-chain="plant" data-idx="4" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="plant" data-idx="4" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv6</div><input type="text" placeholder="物品名称" data-chain="plant" data-idx="5" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="plant" data-idx="5" data-field="icon" data-section="items"></div></div><div style="margin-bottom: 14px;"><div class="dp-chain-title">工具类 (tool)</div><div class="dp-item-row" style="grid-template-columns: 1fr;"><div class="dp-sub-title" style="margin: 0px 0px 2px;">生成器点击音效</div><input type="text" placeholder="https://... 或 ./audio/spawn.ogg" data-chain="tool" data-field="spawnSound" data-section="chainRoot"></div><div class="dp-sub-title">生成器等级素材 (Lv.0~3)</div><div class="dp-col-headers"><span>等级</span><span>名称/标签</span><span>图标 / 图片路径</span></div><div class="dp-item-row"><div class="lv">G0</div><input type="text" placeholder="生成器名称" data-chain="tool" data-idx="0" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="tool" data-idx="0" data-field="icon" data-section="generatorLevels"></div><div class="dp-item-row"><div class="lv">G1</div><input type="text" placeholder="生成器名称" data-chain="tool" data-idx="1" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="tool" data-idx="1" data-field="icon" data-section="generatorLevels"></div><div class="dp-item-row"><div class="lv">G2</div><input type="text" placeholder="生成器名称" data-chain="tool" data-idx="2" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="tool" data-idx="2" data-field="icon" data-section="generatorLevels"></div><div class="dp-item-row"><div class="lv">G3</div><input type="text" placeholder="生成器名称" data-chain="tool" data-idx="3" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="tool" data-idx="3" data-field="icon" data-section="generatorLevels"></div><div class="dp-sub-title" style="margin-top: 8px;">合成链物品 (Lv.1~6)</div><div class="dp-col-headers"><span>等级</span><span>物品名称</span><span>图标 / 图片路径</span></div><div class="dp-item-row"><div class="lv">Lv1</div><input type="text" placeholder="物品名称" data-chain="tool" data-idx="0" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="tool" data-idx="0" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv2</div><input type="text" placeholder="物品名称" data-chain="tool" data-idx="1" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="tool" data-idx="1" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv3</div><input type="text" placeholder="物品名称" data-chain="tool" data-idx="2" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="tool" data-idx="2" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv4</div><input type="text" placeholder="物品名称" data-chain="tool" data-idx="3" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="tool" data-idx="3" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv5</div><input type="text" placeholder="物品名称" data-chain="tool" data-idx="4" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="tool" data-idx="4" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv6</div><input type="text" placeholder="物品名称" data-chain="tool" data-idx="5" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="tool" data-idx="5" data-field="icon" data-section="items"></div></div><div style="margin-bottom: 14px;"><div class="dp-chain-title">宝石类 (gem)</div><div class="dp-item-row" style="grid-template-columns: 1fr;"><div class="dp-sub-title" style="margin: 0px 0px 2px;">生成器点击音效</div><input type="text" placeholder="https://... 或 ./audio/spawn.ogg" data-chain="gem" data-field="spawnSound" data-section="chainRoot"></div><div class="dp-sub-title">生成器等级素材 (Lv.0~3)</div><div class="dp-col-headers"><span>等级</span><span>名称/标签</span><span>图标 / 图片路径</span></div><div class="dp-item-row"><div class="lv">G0</div><input type="text" placeholder="生成器名称" data-chain="gem" data-idx="0" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="gem" data-idx="0" data-field="icon" data-section="generatorLevels"></div><div class="dp-item-row"><div class="lv">G1</div><input type="text" placeholder="生成器名称" data-chain="gem" data-idx="1" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="gem" data-idx="1" data-field="icon" data-section="generatorLevels"></div><div class="dp-item-row"><div class="lv">G2</div><input type="text" placeholder="生成器名称" data-chain="gem" data-idx="2" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="gem" data-idx="2" data-field="icon" data-section="generatorLevels"></div><div class="dp-item-row"><div class="lv">G3</div><input type="text" placeholder="生成器名称" data-chain="gem" data-idx="3" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="gem" data-idx="3" data-field="icon" data-section="generatorLevels"></div><div class="dp-sub-title" style="margin-top: 8px;">合成链物品 (Lv.1~6)</div><div class="dp-col-headers"><span>等级</span><span>物品名称</span><span>图标 / 图片路径</span></div><div class="dp-item-row"><div class="lv">Lv1</div><input type="text" placeholder="物品名称" data-chain="gem" data-idx="0" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="gem" data-idx="0" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv2</div><input type="text" placeholder="物品名称" data-chain="gem" data-idx="1" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="gem" data-idx="1" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv3</div><input type="text" placeholder="物品名称" data-chain="gem" data-idx="2" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="gem" data-idx="2" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv4</div><input type="text" placeholder="物品名称" data-chain="gem" data-idx="3" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="gem" data-idx="3" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv5</div><input type="text" placeholder="物品名称" data-chain="gem" data-idx="4" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="gem" data-idx="4" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv6</div><input type="text" placeholder="物品名称" data-chain="gem" data-idx="5" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="gem" data-idx="5" data-field="icon" data-section="items"></div></div><div style="margin-bottom: 14px;"><div class="dp-chain-title">食物类 (food)</div><div class="dp-item-row" style="grid-template-columns: 1fr;"><div class="dp-sub-title" style="margin: 0px 0px 2px;">生成器点击音效</div><input type="text" placeholder="https://... 或 ./audio/spawn.ogg" data-chain="food" data-field="spawnSound" data-section="chainRoot"></div><div class="dp-sub-title">生成器等级素材 (Lv.0~3)</div><div class="dp-col-headers"><span>等级</span><span>名称/标签</span><span>图标 / 图片路径</span></div><div class="dp-item-row"><div class="lv">G0</div><input type="text" placeholder="生成器名称" data-chain="food" data-idx="0" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="food" data-idx="0" data-field="icon" data-section="generatorLevels"></div><div class="dp-item-row"><div class="lv">G1</div><input type="text" placeholder="生成器名称" data-chain="food" data-idx="1" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="food" data-idx="1" data-field="icon" data-section="generatorLevels"></div><div class="dp-item-row"><div class="lv">G2</div><input type="text" placeholder="生成器名称" data-chain="food" data-idx="2" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="food" data-idx="2" data-field="icon" data-section="generatorLevels"></div><div class="dp-item-row"><div class="lv">G3</div><input type="text" placeholder="生成器名称" data-chain="food" data-idx="3" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="food" data-idx="3" data-field="icon" data-section="generatorLevels"></div><div class="dp-sub-title" style="margin-top: 8px;">合成链物品 (Lv.1~6)</div><div class="dp-col-headers"><span>等级</span><span>物品名称</span><span>图标 / 图片路径</span></div><div class="dp-item-row"><div class="lv">Lv1</div><input type="text" placeholder="物品名称" data-chain="food" data-idx="0" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="food" data-idx="0" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv2</div><input type="text" placeholder="物品名称" data-chain="food" data-idx="1" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="food" data-idx="1" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv3</div><input type="text" placeholder="物品名称" data-chain="food" data-idx="2" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="food" data-idx="2" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv4</div><input type="text" placeholder="物品名称" data-chain="food" data-idx="3" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="food" data-idx="3" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv5</div><input type="text" placeholder="物品名称" data-chain="food" data-idx="4" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="food" data-idx="4" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv6</div><input type="text" placeholder="物品名称" data-chain="food" data-idx="5" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="food" data-idx="5" data-field="icon" data-section="items"></div></div></div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:4px;">
+        <button id="dp-apply" style="flex:1;">应用配置</button>
+        <button id="dp-export" style="flex:1;background:#27ae60;">导出 HTML</button>
+    </div>
+    <button id="dp-reset" style="width:100%;margin-top:6px;background:#7f8c8d;font-size:11px;padding:6px;">重置为默认配置</button>
+
+    <div class="dp-hint">
+        「应用配置」后自动保存到本地，刷新不丢失。「导出 HTML」下载含当前配置的独立文件，可直接发给他人。
+    </div>
+</div>
+
+<div id="touch-ghost"></div>
+<div id="victory-overlay">
+    <img id="victory-img" src="" alt="Victory!">
+    <div class="victory-text">Victory!</div>
+    <div class="victory-sub" id="victory-sub"></div>
+    <button onclick="document.getElementById('victory-overlay').classList.remove('show')">继续游戏</button>
+</div>
+<div id="toast" class="" style="background: rgb(46, 204, 113);">配置已应用并保存！</div>
+
+<script>
+/* ─────────────────────────────────────────────
+   游戏配置 JSON — 这是"单一数据源"
+   可替换为从外部 JSON 文件加载：
+     fetch('config.json').then(r=>r.json()).then(cfg => new MergeGame(cfg))
+   ───────────────────────────────────────────── */
+const GAME_CONFIG = {
+    "rules": {
+        "rows": 7,
+        "cols": 7,
+        "initialEnergy": 513,
+        "maxEnergy": 999,
+        "energyRecoverRate": 3000,
+        "energyCostPerClick": 1,
+        "mergeSound": "https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg",
+        "orderSound": "https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg",
+        "bgmUrl": "https://upload.wikimedia.org/wikipedia/commons/1/1e/Air_%28Bach%29.ogg",
+        "bgmVolume": 0.45,
+        "victoryTarget": 513,
+        "victoryImage": "https://i.ibb.co/xS45pj8Q/image.png",
+        "victorySound": ""
+    },
+    "chains": {
+        "plant": {
+            "name": "植物类",
+            "spawnSound": "",
+            "generatorLevels": [
+                {
+                    "icon": "https://i.ibb.co/67Rxrg9F/jc1.png",
+                    "label": "新卷",
+                    "bgColor": "#fff9c4"
+                },
+                {
+                    "icon": "https://i.ibb.co/PsqKXVsQ/jc2.png",
+                    "label": "睡卷",
+                    "bgColor": "#fff176"
+                },
+                {
+                    "icon": "https://i.ibb.co/67B9DTXL/jc3.png",
+                    "label": "卷窝",
+                    "bgColor": "#ffcc02"
+                },
+                {
+                    "icon": "https://i.ibb.co/GQ5cy6Qc/jc4.png",
+                    "label": "獭卷",
+                    "bgColor": "#ff8f00"
+                }
+            ],
+            "items": [
+                {
+                    "name": "花卷宝宝",
+                    "icon": "https://i.ibb.co/Z6b5T6Kq/j1.png",
+                    "color": "#e8f5e9",
+                    "level": 1
+                },
+                {
+                    "name": "小花卷",
+                    "icon": "https://i.ibb.co/tpjXHh23/j2.png",
+                    "color": "#c8e6c9",
+                    "level": 2
+                },
+                {
+                    "name": "花卷",
+                    "icon": "https://i.ibb.co/RZvd6GH/j3.png",
+                    "color": "#a5d6a7",
+                    "level": 3
+                },
+                {
+                    "name": "中花卷",
+                    "icon": "https://i.ibb.co/1YhHfxfc/j4.png",
+                    "color": "#81c784",
+                    "level": 4
+                },
+                {
+                    "name": "大花卷",
+                    "icon": "https://i.ibb.co/SXyWhSjy/j5.png",
+                    "color": "#4caf50",
+                    "level": 5
+                },
+                {
+                    "name": "太阳花卷",
+                    "icon": "https://i.ibb.co/rNKDNRp/j6.png",
+                    "color": "#2e7d32",
+                    "level": 6
+                }
+            ]
+        },
+        "tool": {
+            "name": "工具类",
+            "spawnSound": "",
+            "generatorLevels": [
+                {
+                    "icon": "https://i.ibb.co/sdvXyK46/zc1.png",
+                    "label": "猪床",
+                    "bgColor": "#f5f5f5"
+                },
+                {
+                    "icon": "https://i.ibb.co/6JsGPCz0/zc2.png",
+                    "label": "抓猪",
+                    "bgColor": "#e0e0e0"
+                },
+                {
+                    "icon": "https://i.ibb.co/DHnRqmhg/zc3.png",
+                    "label": "猪巢",
+                    "bgColor": "#bdbdbd"
+                },
+                {
+                    "icon": "https://i.ibb.co/BKLTNG9y/zc4.png",
+                    "label": "獭芝",
+                    "bgColor": "#757575"
+                }
+            ],
+            "items": [
+                {
+                    "name": "宝宝猪",
+                    "icon": "https://i.ibb.co/GQHHYzGy/z1.png",
+                    "color": "#f5f5f5",
+                    "level": 1
+                },
+                {
+                    "name": "芝芝宝",
+                    "icon": "https://i.ibb.co/rRTZ5SFX/z2.png",
+                    "color": "#e0e0e0",
+                    "level": 2
+                },
+                {
+                    "name": "芝小猪",
+                    "icon": "https://i.ibb.co/1fGSG05z/z3.png",
+                    "color": "#bdbdbd",
+                    "level": 3
+                },
+                {
+                    "name": "芝士",
+                    "icon": "https://i.ibb.co/DHXrKG0j/z4.png",
+                    "color": "#9e9e9e",
+                    "level": 4
+                },
+                {
+                    "name": "大芝猪",
+                    "icon": "https://i.ibb.co/HLZrDQTL/z5.png",
+                    "color": "#757575",
+                    "level": 5
+                },
+                {
+                    "name": "芝大猪",
+                    "icon": "https://i.ibb.co/zhc4k1V2/z6.png",
+                    "color": "#424242",
+                    "level": 6
+                }
+            ]
+        },
+        "gem": {
+            "name": "宝石类",
+            "spawnSound": "",
+            "generatorLevels": [
+                {
+                    "icon": "https://i.ibb.co/sJ69Xqyx/image.png",
+                    "label": "寻獭",
+                    "bgColor": "#fce4ec"
+                },
+                {
+                    "icon": "https://i.ibb.co/Kp10CT5W/image.png",
+                    "label": "探獭",
+                    "bgColor": "#e1bee7"
+                },
+                {
+                    "icon": "https://i.ibb.co/tpZTJsCt/image.png",
+                    "label": "獭观",
+                    "bgColor": "#ce93d8"
+                },
+                {
+                    "icon": "https://i.ibb.co/xtRGdyqN/image.png",
+                    "label": "獭行",
+                    "bgColor": "#7b1fa2"
+                }
+            ],
+            "items": [
+                {
+                    "name": "獭一",
+                    "icon": "https://i.ibb.co/5Wy05ZqM/image.png",
+                    "color": "#fce4ec",
+                    "level": 1
+                },
+                {
+                    "name": "獭二",
+                    "icon": "https://i.ibb.co/6Jc9LT1L/image.png",
+                    "color": "#f8bbd0",
+                    "level": 2
+                },
+                {
+                    "name": "獭三",
+                    "icon": "https://i.ibb.co/cchjvYws/image.png",
+                    "color": "#e1bee7",
+                    "level": 3
+                },
+                {
+                    "name": "獭四",
+                    "icon": "https://i.ibb.co/20PVwLkt/image.png",
+                    "color": "#ce93d8",
+                    "level": 4
+                },
+                {
+                    "name": "獭五",
+                    "icon": "https://i.ibb.co/gZprHfQn/image.png",
+                    "color": "#ab47bc",
+                    "level": 5
+                },
+                {
+                    "name": "獭六",
+                    "icon": "https://i.ibb.co/s9VMc00C/image.png",
+                    "color": "#7b1fa2",
+                    "level": 6
+                }
+            ]
+        },
+        "food": {
+            "name": "食物类",
+            "spawnSound": "",
+            "generatorLevels": [
+                {
+                    "icon": "https://i.ibb.co/CpQ312WJ/image.png",
+                    "label": "芭乐吉",
+                    "bgColor": "#fff8e1"
+                },
+                {
+                    "icon": "https://i.ibb.co/5XCy0z6V/image.png",
+                    "label": "芭乐偷",
+                    "bgColor": "#ffecb3"
+                },
+                {
+                    "icon": "https://i.ibb.co/4n5bhMPF/image.png",
+                    "label": "芭乐抗",
+                    "bgColor": "#ffca28"
+                },
+                {
+                    "icon": "https://i.ibb.co/chbQLzWt/image.png",
+                    "label": "芭乐园",
+                    "bgColor": "#ff8f00"
+                }
+            ],
+            "items": [
+                {
+                    "name": "巴一",
+                    "icon": "https://i.ibb.co/RGPCS296/image.png",
+                    "color": "#fff8e1",
+                    "level": 1
+                },
+                {
+                    "name": "巴二",
+                    "icon": "https://i.ibb.co/WWzb0BwR/image.png",
+                    "color": "#ffecb3",
+                    "level": 2
+                },
+                {
+                    "name": "巴三",
+                    "icon": "https://i.ibb.co/7BgNtkg/image.png",
+                    "color": "#ffe082",
+                    "level": 3
+                },
+                {
+                    "name": "巴四",
+                    "icon": "https://i.ibb.co/NgVGHp4C/image.png",
+                    "color": "#ffca28",
+                    "level": 4
+                },
+                {
+                    "name": "巴五",
+                    "icon": "https://i.ibb.co/PsV09Qq5/image.png",
+                    "color": "#ffb300",
+                    "level": 5
+                },
+                {
+                    "name": "巴六",
+                    "icon": "https://i.ibb.co/k2RbBprZ/image.png",
+                    "color": "#ff8f00",
+                    "level": 6
+                }
+            ]
+        }
+    }
+};
+
+/* ─────────────────────────────────────────────
+   工具函数：渲染图标（Emoji 或 <img>）
+   判断依据：包含路径分隔符 / 或常见图片扩展名
+   ───────────────────────────────────────────── */
+function renderIcon(icon) {
+    if (!icon) return '';
+    const isPath = icon.includes('/') || /\.(png|jpg|jpeg|gif|webp|svg|bmp|ico)$/i.test(icon);
+    if (isPath) {
+        return `<img src="${icon}" alt="item" onerror="this.style.opacity='0.3'">`;
+    }
+    return `<span class="item-icon-emoji">${icon}</span>`;
+}
+
+/* ─────────────────────────────────────────────
+   深拷贝工具（避免面板修改直接污染运行时配置）
+   ───────────────────────────────────────────── */
+function deepClone(obj) {
+    return JSON.parse(JSON.stringify(obj));
+}
+
+/* ─────────────────────────────────────────────
+   Toast 通知
+   ───────────────────────────────────────────── */
+function showToast(msg, color = '#2ecc71') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.style.background = color;
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+/* ─────────────────────────────────────────────
+   音效播放（带缓存，避免重复实例化）
+   ───────────────────────────────────────────── */
+const _audioCache = {};
+function playSound(url, volume = 0.5) {
+    if (!url) return;
+    try {
+        // 复用已缓存的 Audio 对象，重置播放位置
+        if (!_audioCache[url]) {
+            _audioCache[url] = new Audio(url);
+            _audioCache[url].volume = volume;
+        }
+        const a = _audioCache[url];
+        a.currentTime = 0;
+        a.play().catch(() => {});
+    } catch (e) {}
+}
+
+/* ─────────────────────────────────────────────
+   背景音乐管理器
+   ───────────────────────────────────────────── */
+class BgmManager {
+    constructor() {
+        this._audio   = null;
+        this._muted   = false;
+        this._url     = '';
+        this._volume  = 0.25;
+        this._btn     = document.getElementById('bgm-toggle');
+        this._btn.addEventListener('click', () => this.toggleMute());
+        // 首次用户交互后自动启动（绕过 autoplay 限制）
+        this._pendingPlay = false;
+        const unlock = () => {
+            if (this._pendingPlay) this._tryPlay();
+            document.removeEventListener('pointerdown', unlock);
+            document.removeEventListener('keydown', unlock);
+        };
+        document.addEventListener('pointerdown', unlock);
+        document.addEventListener('keydown', unlock);
+    }
+
+    load(url, volume = 0.25) {
+        const changed = url !== this._url;
+        this._url    = url;
+        this._volume = volume;
+        if (!url) { this._stop(); this._updateBtn(); return; }
+        if (changed || !this._audio) {
+            this._stop();
+            this._audio         = new Audio(url);
+            this._audio.loop    = true;
+            this._audio.volume  = this._muted ? 0 : volume;
+            this._pendingPlay   = true;
+            this._tryPlay();
+        } else {
+            this._audio.volume = this._muted ? 0 : volume;
+        }
+        this._updateBtn();
+    }
+
+    _tryPlay() {
+        if (!this._audio || !this._url) return;
+        this._audio.play().catch(() => { this._pendingPlay = true; });
+        this._pendingPlay = false;
+    }
+
+    _stop() {
+        if (this._audio) { this._audio.pause(); this._audio = null; }
+    }
+
+    toggleMute() {
+        this._muted = !this._muted;
+        if (this._audio) this._audio.volume = this._muted ? 0 : this._volume;
+        this._updateBtn();
+    }
+
+    _updateBtn() {
+        if (!this._btn) return;
+        this._btn.textContent = (!this._url || this._muted) ? '🔇' : '🎵';
+        this._btn.title = this._muted ? '点击恢复背景音乐' : '点击静音背景音乐';
+    }
+}
+
+const bgm = new BgmManager();
+
+/* ─────────────────────────────────────────────
+   订单系统
+   ───────────────────────────────────────────── */
+const ORDER_SLOTS = 3;
+
+function generateOrder(config) {
+    const chainKeys = Object.keys(config.chains);
+    // 随机选 2 条不同链（允许同一链不同等级）
+    const reqs = [];
+    for (let i = 0; i < 2; i++) {
+        const chainKey = chainKeys[Math.floor(Math.random() * chainKeys.length)];
+        // 等级 3~5（index 2~4，即 items[2..4]，共5个等级取前5）
+        const chain = config.chains[chainKey];
+        const maxIdx = chain.items.length - 2; // 不含 Lv.6（预留提交用）
+        const minIdx = 2; // Lv.3 = index 2
+        const levelIdx = minIdx + Math.floor(Math.random() * (maxIdx - minIdx + 1));
+        reqs.push({ chainKey, levelIdx });
+    }
+    return { reqs, reward: 1 };
+}
+
+function renderOrderBar(orders, config, gameInstance) {
+    const bar = document.getElementById('order-bar');
+    bar.innerHTML = '<div class="side-label">巴拉订单</div>';
+    orders.forEach((order, oi) => {
+        const card = document.createElement('div');
+        card.className = 'order-card';
+
+        // 检查棋盘上是否能满足订单
+        const fulfillable = canFulfillOrder(order, gameInstance.boardData);
+        if (fulfillable) card.classList.add('fulfillable');
+
+        const title = document.createElement('div');
+        title.className = 'order-card-title';
+        title.textContent = `巴拉订单 #${oi + 1}`;
+        card.appendChild(title);
+
+        const itemsDiv = document.createElement('div');
+        itemsDiv.className = 'order-items';
+        order.reqs.forEach(req => {
+            const chain = config.chains[req.chainKey];
+            const item  = chain.items[req.levelIdx];
+            const row = document.createElement('div');
+            row.className = 'order-item-row';
+            row.innerHTML = `
+                <div class="order-item-icon">${renderIcon(item.icon)}</div>
+                <div class="order-item-desc">Lv.${item.level} ${item.name}</div>
+                <div class="order-item-check">✓</div>
+            `;
+            itemsDiv.appendChild(row);
+        });
+        card.appendChild(itemsDiv);
+
+        const rewardDiv = document.createElement('div');
+        rewardDiv.className = 'order-reward';
+        rewardDiv.textContent = `奖励 +${order.reward} 胜利点数`;
+        card.appendChild(rewardDiv);
+
+        const hint = document.createElement('div');
+        hint.className = 'order-fulfill-hint';
+        hint.textContent = '点击完成订单';
+        card.appendChild(hint);
+
+        card.onclick = () => gameInstance.fulfillOrder(oi);
+        bar.appendChild(card);
+    });
+}
+
+function canFulfillOrder(order, boardData) {
+    // 模拟扣除：每个需求独立找一格
+    const used = new Set();
+    return order.reqs.every(req => {
+        const idx = boardData.findIndex((d, i) =>
+            !used.has(i) && d && !d.isGenerator &&
+            d.type === req.chainKey && d.level === req.levelIdx
+        );
+        if (idx >= 0) { used.add(idx); return true; }
+        return false;
+    });
+}
+
+/* ─────────────────────────────────────────────
+   游戏主类
+   ───────────────────────────────────────────── */
+class MergeGame {
+    constructor(config) {
+        this.config = deepClone(config);
+        this.energy = this.config.rules.initialEnergy;
+        this.coins = 0;
+        this.boardData = Array(this.config.rules.rows * this.config.rules.cols).fill(null);
+        this.draggedIndex = null;
+        this._energyTimer = null;
+        // 每种链条六级物品的提交计数
+        this.submissions = Object.fromEntries(Object.keys(this.config.chains).map(k => [k, 0]));
+        this.setsCompleted = 0;
+        this._victoryTriggered = false;
+        // 各链条生成器等级 (0~3)
+        this.generatorLevels = Object.fromEntries(Object.keys(this.config.chains).map(k => [k, 0]));
+
+        // 订单系统：3 个槽位
+        this.orders = Array.from({ length: ORDER_SLOTS }, () => generateOrder(this.config));
+
+        this._initBoard();
+        this._placeSeedGenerators();
+        this.render();
+        this._startEnergyTimer();
+        // 启动背景音乐
+        bgm.load(this.config.rules.bgmUrl || '', this.config.rules.bgmVolume ?? 0.25);
+    }
+
+    /* 构建 DOM 格子 */
+    _initBoard() {
+        const boardEl = document.getElementById('board');
+        boardEl.innerHTML = '';
+
+        // 动态计算格子尺寸，使棋盘适应当前屏幕宽度
+        const cols    = this.config.rules.cols;
+        const gap     = window.innerWidth < 480 ? 5 : 8;
+        const padding = gap;
+        const maxBoardW = Math.min(window.innerWidth - 16, 640);
+        const cellSize  = Math.floor((maxBoardW - padding * 2 - gap * (cols - 1)) / cols);
+        document.documentElement.style.setProperty('--cell-size', `${cellSize}px`);
+        document.documentElement.style.setProperty('--cell-gap',  `${gap}px`);
+
+        boardEl.style.gridTemplateColumns = `repeat(${cols}, ${cellSize}px)`;
+
+        const total = this.config.rules.rows * this.config.rules.cols;
+        for (let i = 0; i < total; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.dataset.index = i;
+            cell.draggable = true;
+
+            cell.addEventListener('dragstart', (e) => {
+                this.onDragStart(i);
+                e.dataTransfer.effectAllowed = 'move';
+            });
+
+            // dragover: highlight with snap style based on whether a merge is possible
+            cell.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                // Clear previous snap highlights
+                this._clearSnapHighlights();
+                const src = this.boardData[this.draggedIndex];
+                const tgt = this.boardData[i];
+                if (src && tgt && !src.isGenerator && !tgt.isGenerator &&
+                    src.type === tgt.type && src.level === tgt.level &&
+                    src.level < this.config.chains[src.type].items.length - 1) {
+                    cell.classList.add('snap-target-merge');
+                } else {
+                    cell.classList.add('snap-target');
+                }
+            });
+
+            cell.addEventListener('dragleave', (e) => {
+                // Only clear if truly leaving cell bounds
+                if (!cell.contains(e.relatedTarget)) {
+                    cell.classList.remove('snap-target', 'snap-target-merge');
+                }
+            });
+
+            cell.addEventListener('drop', (e) => {
+                e.preventDefault();
+                cell.classList.remove('snap-target', 'snap-target-merge', 'drag-over');
+                this._clearSnapHighlights();
+                this.onDrop(i);
+            });
+
+            // ── Touch drag support (iOS / Android) ──
+            cell.addEventListener('touchstart', (e) => {
+                if (!this.boardData[i]) return;
+                e.preventDefault();
+                this._touchDragStart(i, e.touches[0]);
+            }, { passive: false });
+
+            boardEl.appendChild(cell);
+        }
+
+        // Clear all highlights when drag ends anywhere
+        boardEl.addEventListener('dragend', () => this._clearSnapHighlights());
+
+        // Touch move/end are on document to catch movement outside the cell
+        if (!this._touchMoveHandler) {
+            this._touchMoveHandler = (e) => {
+                if (this.draggedIndex === null) return;
+                e.preventDefault();
+                this._touchDragMove(e.touches[0]);
+            };
+            this._touchEndHandler = (e) => {
+                if (this.draggedIndex === null) return;
+                e.preventDefault();
+                this._touchDragEnd(e.changedTouches[0]);
+            };
+            document.addEventListener('touchmove', this._touchMoveHandler, { passive: false });
+            document.addEventListener('touchend',  this._touchEndHandler,  { passive: false });
+        }
+    }
+
+    _touchDragStart(index, touch) {
+        this.draggedIndex = index;
+        const ghost = document.getElementById('touch-ghost');
+        const srcCell = document.querySelector(`.cell[data-index="${index}"]`);
+        const itemEl  = srcCell?.querySelector('.item');
+        if (itemEl) {
+            ghost.innerHTML = itemEl.outerHTML;
+            ghost.style.width  = getComputedStyle(itemEl).width;
+            ghost.style.height = getComputedStyle(itemEl).height;
+        }
+        ghost.style.left    = touch.clientX + 'px';
+        ghost.style.top     = touch.clientY + 'px';
+        ghost.style.display = 'block';
+        this._clearSnapHighlights();
+    }
+
+    _touchDragMove(touch) {
+        const ghost = document.getElementById('touch-ghost');
+        ghost.style.left = touch.clientX + 'px';
+        ghost.style.top  = touch.clientY + 'px';
+        // Highlight cell under finger
+        ghost.style.display = 'none';
+        const el = document.elementFromPoint(touch.clientX, touch.clientY);
+        ghost.style.display = 'block';
+        this._clearSnapHighlights();
+        const cell = el?.closest('.cell');
+        if (cell) {
+            const ti = parseInt(cell.dataset.index, 10);
+            const src = this.boardData[this.draggedIndex];
+            const tgt = this.boardData[ti];
+            if (src && tgt && !src.isGenerator && !tgt.isGenerator &&
+                src.type === tgt.type && src.level === tgt.level &&
+                src.level < this.config.chains[src.type].items.length - 1) {
+                cell.classList.add('snap-target-merge');
+            } else {
+                cell.classList.add('snap-target');
+            }
+        }
+    }
+
+    _touchDragEnd(touch) {
+        const ghost = document.getElementById('touch-ghost');
+        ghost.style.display = 'none';
+        ghost.innerHTML = '';
+        this._clearSnapHighlights();
+        // Find cell under finger
+        ghost.style.display = 'none';
+        const el = document.elementFromPoint(touch.clientX, touch.clientY);
+        const cell = el?.closest('.cell');
+        if (cell) {
+            const ti = parseInt(cell.dataset.index, 10);
+            this.onDrop(ti);
+        } else {
+            this.draggedIndex = null;
+        }
+    }
+
+    _clearSnapHighlights() {
+        document.querySelectorAll('.cell').forEach(c => {
+            c.classList.remove('snap-target', 'snap-target-merge', 'drag-over');
+        });
+    }
+
+    _placeSeedGenerators() {
+        const chainKeys = Object.keys(this.config.chains);
+        const cols = this.config.rules.cols;
+        const rows = this.config.rules.rows;
+        // 四个角：左上、右上、左下、右下
+        const corners = [
+            0,
+            cols - 1,
+            (rows - 1) * cols,
+            rows * cols - 1
+        ];
+        chainKeys.slice(0, 4).forEach((key, i) => {
+            this.boardData[corners[i]] = { isGenerator: true, type: key };
+        });
+    }
+
+    /* 提交六级物品 */
+    submitItem(index) {
+        const data = this.boardData[index];
+        if (!data || data.isGenerator) return;
+        const maxLevel = this.config.chains[data.type].items.length - 1;
+        if (data.level !== maxLevel) return;
+
+        // 从棋盘移除
+        this.boardData[index] = null;
+        this.submissions[data.type] = (this.submissions[data.type] || 0) + 1;
+
+        // 升级对应生成器（最多 Lv.3）
+        const MAX_GEN_LEVEL = 3;
+        const prevGenLv = this.generatorLevels[data.type] || 0;
+        let genUpgradeMsg = '';
+        if (prevGenLv < MAX_GEN_LEVEL) {
+            this.generatorLevels[data.type] = prevGenLv + 1;
+            const newLv = this.generatorLevels[data.type];
+            const genCfg = this.config.chains[data.type].generatorLevels[newLv];
+            genUpgradeMsg = `\n${this.config.chains[data.type].name}生成器升至 Lv.${newLv}【${genCfg.label}】50%出现 Lv.${newLv+1} 物品！`;
+        }
+
+        // 检查是否集齐四种
+        const chainKeys = Object.keys(this.config.chains);
+        const canComplete = chainKeys.every(k => (this.submissions[k] || 0) >= 1);
+        if (canComplete) {
+            chainKeys.forEach(k => { this.submissions[k] -= 1; });
+            this.coins += 1;
+            this.setsCompleted += 1;
+            showToast(`集齐！+1 胜利点数（共 ${this.setsCompleted} 套）${genUpgradeMsg}`, '#f39c12');
+            document.body.classList.add('set-complete');
+            setTimeout(() => document.body.classList.remove('set-complete'), 600);
+            // 胜利检查
+            if (this.coins >= this.config.rules.victoryTarget && !this._victoryTriggered) {
+                this._victoryTriggered = true;
+                this.showVictory();
+            }
+        } else {
+            const chainName = this.config.chains[data.type].name;
+            const baseMsg = `已提交 ${chainName} 六级物品`;
+            showToast(genUpgradeMsg ? baseMsg + genUpgradeMsg : baseMsg, genUpgradeMsg ? '#9b59b6' : '#2ecc71');
+        }
+
+        this.render();
+    }
+
+    /* 重载配置（开发者面板 Apply 时调用） */
+    reload(newConfig) {
+        const prevEnergy = this.energy;
+        const prevCoins  = this.coins;
+        const prevBoard  = deepClone(this.boardData);
+
+        this.config = deepClone(newConfig);
+
+        // 修正棋盘尺寸
+        const newTotal = this.config.rules.rows * this.config.rules.cols;
+        while (this.boardData.length < newTotal) this.boardData.push(null);
+        this.boardData = this.boardData.slice(0, newTotal);
+
+        // 能量不超过新上限
+        this.energy = Math.min(prevEnergy, this.config.rules.maxEnergy);
+        this.coins  = prevCoins;
+        // 如果目标调高了则重置胜利标志
+        if (this.coins < this.config.rules.victoryTarget) this._victoryTriggered = false;
+        // 保留现有提交数，新增链条初始化为0
+        const prevSubs = this.submissions || {};
+        this.submissions = Object.fromEntries(
+            Object.keys(this.config.chains).map(k => [k, prevSubs[k] || 0])
+        );
+        const prevGenLvs = this.generatorLevels || {};
+        this.generatorLevels = Object.fromEntries(
+            Object.keys(this.config.chains).map(k => [k, prevGenLvs[k] || 0])
+        );
+
+        // 重新生成订单（链条可能变化）
+        this.orders = Array.from({ length: ORDER_SLOTS }, () => generateOrder(this.config));
+
+        // 重建 DOM（规格可能变）
+        this._initBoard();
+
+        // 重置体力计时器
+        if (this._energyTimer) clearInterval(this._energyTimer);
+        this._startEnergyTimer();
+
+        // 更新背景音乐（配置可能已变）
+        bgm.load(this.config.rules.bgmUrl || '', this.config.rules.bgmVolume ?? 0.25);
+
+        this.render();
+    }
+
+    spawnItem(type) {
+        if (this.energy < this.config.rules.energyCostPerClick) {
+            showToast('电量不足！', '#e74c3c');
+            return;
+        }
+
+        const emptyIndices = this.boardData
+            .map((v, i) => v === null ? i : null)
+            .filter(v => v !== null);
+
+        if (emptyIndices.length === 0) {
+            showToast('棋盘满了！', '#e67e22');
+            return;
+        }
+
+        const targetIndex = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
+
+        // 生成器等级决定出货概率
+        // Lv.0: 100% Lv.1
+        // Lv.1: 50% Lv.1 / 50% Lv.2
+        // Lv.2: 40% Lv.1 / 40% Lv.2 / 20% Lv.3
+        // Lv.3: 30% Lv.1 / 30% Lv.2 / 30% Lv.3 / 10% Lv.4
+        const genLv = this.generatorLevels[type] || 0;
+        const maxItemIdx = this.config.chains[type].items.length - 1;
+        const spawnTables = [
+            [[1.0, 0]],                                          // Lv.0
+            [[0.5, 0], [0.5, 1]],                                // Lv.1
+            [[0.4, 0], [0.4, 1], [0.2, 2]],                     // Lv.2
+            [[0.3, 0], [0.3, 1], [0.3, 2], [0.1, 3]],           // Lv.3
+        ];
+        const table = spawnTables[Math.min(genLv, 3)];
+        const roll = Math.random();
+        let cumulative = 0;
+        let spawnIdx = 0;
+        for (const [prob, idx] of table) {
+            cumulative += prob;
+            if (roll < cumulative) { spawnIdx = Math.min(idx, maxItemIdx); break; }
+        }
+
+        this.boardData[targetIndex] = { type, level: spawnIdx };
+        this.energy -= this.config.rules.energyCostPerClick;
+        // 播放该链条的生成器音效
+        playSound(this.config.chains[type]?.spawnSound);
+        this.render();
+    }
+
+    onDragStart(index) {
+        if (this.boardData[index]) {
+            this.draggedIndex = index;
+        }
+    }
+
+    onDrop(targetIndex) {
+        const sourceIndex = this.draggedIndex;
+        if (sourceIndex === null || sourceIndex === targetIndex) return;
+
+        const source = this.boardData[sourceIndex];
+        const target = this.boardData[targetIndex];
+
+        if (!source) { this.draggedIndex = null; return; }
+
+        if (!target) {
+            // 移动到空格
+            this.boardData[targetIndex] = source;
+            this.boardData[sourceIndex] = null;
+        } else if (
+            !source.isGenerator && !target.isGenerator &&
+            source.type === target.type &&
+            source.level === target.level
+        ) {
+            const maxLevel = this.config.chains[source.type].items.length - 1;
+            if (source.level < maxLevel) {
+                this.boardData[targetIndex] = { type: source.type, level: source.level + 1 };
+                this.boardData[sourceIndex] = null;
+                // 播放合成音效
+                playSound(this.config.rules.mergeSound);
+            }
+        } else {
+            // 交换
+            this.boardData[targetIndex] = source;
+            this.boardData[sourceIndex] = target;
+        }
+
+        this.draggedIndex = null;
+        this.render();
+    }
+
+    render() {
+        document.getElementById('energy-val').innerText = this.energy;
+        document.getElementById('max-energy').innerText = this.config.rules.maxEnergy;
+        document.getElementById('coin-val').innerText   = this.coins;
+
+        // 渲染订单栏
+        renderOrderBar(this.orders, this.config, this);
+
+        // 渲染提交栏
+        this._renderSubmitBar();
+
+        const cells = document.querySelectorAll('.cell');
+        cells.forEach((cell, i) => {
+            cell.innerHTML = '';
+            cell.onclick = null;
+            cell.classList.remove('submittable');
+            const data = this.boardData[i];
+            if (!data) return;
+
+            const itemEl = document.createElement('div');
+            itemEl.className = 'item';
+
+            if (data.isGenerator) {
+                itemEl.classList.add('generator');
+                const chainCfg = this.config.chains[data.type];
+                const genLv  = this.generatorLevels[data.type] || 0;
+                const genCfg = chainCfg?.generatorLevels?.[genLv] || {};
+                const genIcon = genCfg.icon || '⚡';
+                const genLabel = genCfg.label || (chainCfg?.name || data.type);
+                if (genCfg.bgColor) itemEl.style.backgroundColor = genCfg.bgColor;
+
+                // 生成器等级角标（仅显示等级）
+                const lvBadge = genLv > 0
+                    ? `<div class="gen-lv-badge">Lv.${genLv}</div>`
+                    : `<div class="gen-lv-badge gen-lv-0">Lv.0</div>`;
+
+                itemEl.innerHTML = `${renderIcon(genIcon)}<div class="item-label">${genLabel}</div>${lvBadge}`;
+                cell.onclick = () => this.spawnItem(data.type);
+            } else {
+                const chainCfg = this.config.chains[data.type];
+                if (!chainCfg) return;
+                const itemConfig = chainCfg.items[data.level];
+                if (!itemConfig) return;
+
+                const maxLevel = chainCfg.items.length - 1;
+                const isMax = data.level === maxLevel;
+
+                itemEl.style.backgroundColor = itemConfig.color || '#eee';
+                itemEl.innerHTML = `
+                    ${renderIcon(itemConfig.icon)}
+                    <div class="item-label">Lv.${itemConfig.level}<br>${itemConfig.name}</div>
+                `;
+
+                if (isMax) {
+                    cell.classList.add('submittable');
+                    // 提交指示角标
+                    const badge = document.createElement('div');
+                    badge.className = 'submit-indicator';
+                    badge.textContent = '提交';
+                    cell.appendChild(badge);
+                    cell.onclick = () => this.submitItem(i);
+                }
+            }
+
+            cell.appendChild(itemEl);
+        });
+    }
+
+    _renderSubmitBar() {
+        const bar = document.getElementById('submit-bar');
+        bar.innerHTML = '<div class="side-label">六级提交</div>';
+        Object.entries(this.config.chains).forEach(([key, chain]) => {
+            const maxItem = chain.items[chain.items.length - 1];
+            const count = this.submissions[key] || 0;
+            const slot = document.createElement('div');
+            slot.className = 'submit-slot' + (count > 0 ? ' has-item' : '');
+            slot.innerHTML = `
+                <div class="s-icon">${renderIcon(maxItem.icon)}</div>
+                <div class="s-name">${maxItem.name}</div>
+                <div class="s-count">${count}</div>
+                <div class="s-hint">已提交</div>
+            `;
+            bar.appendChild(slot);
+        });
+    }
+
+    fulfillOrder(orderIndex) {
+        const order = this.orders[orderIndex];
+        if (!order) return;
+        if (!canFulfillOrder(order, this.boardData)) {
+            showToast('棋盘上没有所需物品！', '#e74c3c');
+            return;
+        }
+        // 扣除物品
+        const used = new Set();
+        order.reqs.forEach(req => {
+            const idx = this.boardData.findIndex((d, i) =>
+                !used.has(i) && d && !d.isGenerator &&
+                d.type === req.chainKey && d.level === req.levelIdx
+            );
+            if (idx >= 0) {
+                used.add(idx);
+                this.boardData[idx] = null;
+            }
+        });
+        // 奖励胜利点数
+        this.coins += order.reward;
+        // 播放订单完成音效
+        playSound(this.config.rules.orderSound);
+        // 生成新订单替换当前槽
+        this.orders[orderIndex] = generateOrder(this.config);
+        showToast(`订单完成！+${order.reward} 胜利点数`, '#9b59b6');
+        // 胜利检查
+        if (this.coins >= this.config.rules.victoryTarget && !this._victoryTriggered) {
+            this._victoryTriggered = true;
+            this.showVictory();
+        }
+        this.render();
+    }
+
+    showVictory() {
+        const overlay = document.getElementById('victory-overlay');
+        const img     = document.getElementById('victory-img');
+        const sub     = document.getElementById('victory-sub');
+        img.src = this.config.rules.victoryImage || '';
+        sub.textContent = `胜利点数达到 ${this.config.rules.victoryTarget}！`;
+        overlay.classList.add('show');
+        // 播放音效
+        try {
+            const sound = new Audio(this.config.rules.victorySound);
+            sound.volume = 0.6;
+            sound.play().catch(() => {});
+        } catch (e) {}
+    }
+
+    _startEnergyTimer() {
+        this._energyTimer = setInterval(() => {
+            if (this.energy < this.config.rules.maxEnergy) {
+                this.energy++;
+                this.render();
+            }
+        }, this.config.rules.energyRecoverRate);
+    }
+}
+
+/* ─────────────────────────────────────────────
+   开发者面板逻辑
+   ───────────────────────────────────────────── */
+class DevPanel {
+    constructor(gameInstance, initialConfig) {
+        this.game   = gameInstance;
+        this.config = deepClone(initialConfig);
+
+        this.panel  = document.getElementById('dev-panel');
+        this.toggle = document.getElementById('dev-toggle');
+
+        this.toggle.addEventListener('click', () => this.open());
+        document.getElementById('dp-close').addEventListener('click', () => this.close());
+        document.getElementById('dp-apply').addEventListener('click', () => this.apply());
+        document.getElementById('dp-export').addEventListener('click', () => this.exportHtml());
+        document.getElementById('dp-reset').addEventListener('click', () => {
+            if (!confirm('确定重置为默认配置？当前修改将丢失。')) return;
+            localStorage.removeItem('mergeGameConfig');
+            location.reload();
+        });
+
+        this.buildForm();
+    }
+
+    open() {
+        this.syncFormFromConfig();
+        this.panel.classList.add('open');
+    }
+
+    close() {
+        this.panel.classList.remove('open');
+    }
+
+    /* 根据当前 game.config 填充表单 */
+    syncFormFromConfig() {
+        const rules = this.game.config.rules;
+        document.getElementById('dp-initialEnergy').value      = rules.initialEnergy;
+        document.getElementById('dp-maxEnergy').value          = rules.maxEnergy;
+        document.getElementById('dp-energyRecoverRate').value  = rules.energyRecoverRate;
+        document.getElementById('dp-energyCostPerClick').value = rules.energyCostPerClick;
+        document.getElementById('dp-mergeSound').value         = rules.mergeSound  || '';
+        document.getElementById('dp-orderSound').value         = rules.orderSound  || '';
+        document.getElementById('dp-bgmUrl').value             = rules.bgmUrl      || '';
+        document.getElementById('dp-bgmVolume').value          = rules.bgmVolume   ?? 0.25;
+        document.getElementById('dp-victoryTarget').value      = rules.victoryTarget || 513;
+        document.getElementById('dp-victoryImage').value       = rules.victoryImage || '';
+        document.getElementById('dp-victorySound').value       = rules.victorySound || '';
+
+        // 重建链条表单
+        this.buildChainsForm(this.game.config.chains);
+    }
+
+    buildForm() {
+        // 首次打开前先填充表单
+        this.syncFormFromConfig();
+    }
+
+    buildChainsForm(chains) {
+        const container = document.getElementById('dp-chains-container');
+        container.innerHTML = '';
+
+        Object.entries(chains).forEach(([chainKey, chain]) => {
+            const wrap = document.createElement('div');
+            wrap.style.marginBottom = '14px';
+
+            // 链条标题
+            const title = document.createElement('div');
+            title.className = 'dp-chain-title';
+            title.textContent = `${chain.name} (${chainKey})`;
+            wrap.appendChild(title);
+
+            // ── 生成器点击音效 ──
+            const soundRow = document.createElement('div');
+            soundRow.className = 'dp-item-row';
+            soundRow.style.gridTemplateColumns = '1fr';
+            const soundLabel = document.createElement('div');
+            soundLabel.className = 'dp-sub-title';
+            soundLabel.textContent = '生成器点击音效';
+            soundLabel.style.margin = '0 0 2px';
+            const soundInput = document.createElement('input');
+            soundInput.type = 'text';
+            soundInput.placeholder = 'https://... 或 ./audio/spawn.ogg';
+            soundInput.value = chain.spawnSound || '';
+            soundInput.dataset.chain   = chainKey;
+            soundInput.dataset.field   = 'spawnSound';
+            soundInput.dataset.section = 'chainRoot';
+            soundRow.appendChild(soundLabel);
+            soundRow.appendChild(soundInput);
+            wrap.appendChild(soundRow);
+
+            // ── 生成器等级配置 ──
+            const genSubtitle = document.createElement('div');
+            genSubtitle.className = 'dp-sub-title';
+            genSubtitle.textContent = '生成器等级素材 (Lv.0~3)';
+            wrap.appendChild(genSubtitle);
+
+            const genHeaders = document.createElement('div');
+            genHeaders.className = 'dp-col-headers';
+            genHeaders.innerHTML = '<span>等级</span><span>名称/标签</span><span>图标 / 图片路径</span>';
+            wrap.appendChild(genHeaders);
+
+            (chain.generatorLevels || []).forEach((gl, idx) => {
+                const row = document.createElement('div');
+                row.className = 'dp-item-row';
+
+                const lv = document.createElement('div');
+                lv.className = 'lv';
+                lv.textContent = `G${idx}`;
+
+                const labelInput = document.createElement('input');
+                labelInput.type = 'text';
+                labelInput.placeholder = '生成器名称';
+                labelInput.value = gl.label || '';
+                labelInput.dataset.chain    = chainKey;
+                labelInput.dataset.idx      = idx;
+                labelInput.dataset.field    = 'label';
+                labelInput.dataset.section  = 'generatorLevels';
+
+                const iconInput = document.createElement('input');
+                iconInput.type = 'text';
+                iconInput.placeholder = '⚡ 或 ./img/gen1.png';
+                iconInput.value = gl.icon || '';
+                iconInput.dataset.chain   = chainKey;
+                iconInput.dataset.idx     = idx;
+                iconInput.dataset.field   = 'icon';
+                iconInput.dataset.section = 'generatorLevels';
+
+                row.appendChild(lv);
+                row.appendChild(labelInput);
+                row.appendChild(iconInput);
+                wrap.appendChild(row);
+            });
+
+            // ── 物品链条配置 ──
+            const itemSubtitle = document.createElement('div');
+            itemSubtitle.className = 'dp-sub-title';
+            itemSubtitle.style.marginTop = '8px';
+            itemSubtitle.textContent = '合成链物品 (Lv.1~6)';
+            wrap.appendChild(itemSubtitle);
+
+            const colHeaders = document.createElement('div');
+            colHeaders.className = 'dp-col-headers';
+            colHeaders.innerHTML = '<span>等级</span><span>物品名称</span><span>图标 / 图片路径</span>';
+            wrap.appendChild(colHeaders);
+
+            chain.items.forEach((item, idx) => {
+                const row = document.createElement('div');
+                row.className = 'dp-item-row';
+
+                const lv = document.createElement('div');
+                lv.className = 'lv';
+                lv.textContent = `Lv${item.level}`;
+
+                const nameInput = document.createElement('input');
+                nameInput.type = 'text';
+                nameInput.placeholder = '物品名称';
+                nameInput.value = item.name;
+                nameInput.dataset.chain   = chainKey;
+                nameInput.dataset.idx     = idx;
+                nameInput.dataset.field   = 'name';
+                nameInput.dataset.section = 'items';
+
+                const iconInput = document.createElement('input');
+                iconInput.type = 'text';
+                iconInput.placeholder = '🍓 或 ./img/a.png';
+                iconInput.value = item.icon;
+                iconInput.dataset.chain   = chainKey;
+                iconInput.dataset.idx     = idx;
+                iconInput.dataset.field   = 'icon';
+                iconInput.dataset.section = 'items';
+
+                row.appendChild(lv);
+                row.appendChild(nameInput);
+                row.appendChild(iconInput);
+                wrap.appendChild(row);
+            });
+
+            container.appendChild(wrap);
+        });
+    }
+
+    /* 读取表单，构建新 config，推送给 game */
+    apply() {
+        const newConfig = deepClone(this.game.config);
+
+        // 规则
+        const toInt = (id) => parseInt(document.getElementById(id).value, 10);
+        newConfig.rules.initialEnergy      = toInt('dp-initialEnergy');
+        newConfig.rules.maxEnergy          = toInt('dp-maxEnergy');
+        newConfig.rules.energyRecoverRate  = toInt('dp-energyRecoverRate');
+        newConfig.rules.energyCostPerClick = toInt('dp-energyCostPerClick');
+        newConfig.rules.mergeSound         = document.getElementById('dp-mergeSound').value.trim();
+        newConfig.rules.orderSound         = document.getElementById('dp-orderSound').value.trim();
+        newConfig.rules.bgmUrl             = document.getElementById('dp-bgmUrl').value.trim();
+        newConfig.rules.bgmVolume          = parseFloat(document.getElementById('dp-bgmVolume').value) || 0.25;
+        newConfig.rules.victoryTarget      = toInt('dp-victoryTarget') || 513;
+        newConfig.rules.victoryImage       = document.getElementById('dp-victoryImage').value.trim();
+        newConfig.rules.victorySound       = document.getElementById('dp-victorySound').value.trim();
+
+        // 校验
+        if (isNaN(newConfig.rules.maxEnergy) || newConfig.rules.maxEnergy < 1) {
+            showToast('电量上限无效！', '#e74c3c');
+            return;
+        }
+        if (isNaN(newConfig.rules.energyRecoverRate) || newConfig.rules.energyRecoverRate < 100) {
+            showToast('恢复间隔不能小于100ms！', '#e74c3c');
+            return;
+        }
+
+        // 链条物品 & 生成器等级 & 链条根属性（spawnSound）
+        document.querySelectorAll('#dp-chains-container input').forEach(input => {
+            const { chain, idx, field, section } = input.dataset;
+            if (!chain || !field || !section) return;
+            if (section === 'chainRoot' && newConfig.chains[chain]) {
+                newConfig.chains[chain][field] = input.value.trim();
+            } else if (idx !== undefined) {
+                const i = parseInt(idx, 10);
+                if (section === 'items' && newConfig.chains[chain]?.items?.[i]) {
+                    newConfig.chains[chain].items[i][field] = input.value.trim();
+                } else if (section === 'generatorLevels' && newConfig.chains[chain]?.generatorLevels?.[i]) {
+                    newConfig.chains[chain].generatorLevels[i][field] = input.value.trim();
+                }
+            }
+        });
+
+        this.game.reload(newConfig);
+        // 持久化到 localStorage
+        try {
+            localStorage.setItem('mergeGameConfig', JSON.stringify(newConfig));
+        } catch(e) {}
+        showToast('配置已应用并保存！');
+    }
+
+    exportHtml() {
+        const cfg = JSON.stringify(this.game.config, null, 4);
+        const html = document.documentElement.outerHTML;
+        // 替换 GAME_CONFIG 定义块（从 const GAME_CONFIG = { 到匹配的 };）
+        const replaced = html.replace(
+            /const GAME_CONFIG\s*=\s*\{[\s\S]*?\n\};/,
+            `const GAME_CONFIG = ${cfg};`
+        );
+        const blob = new Blob([replaced], { type: 'text/html;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'merge-game.html';
+        a.click();
+        URL.revokeObjectURL(a.href);
+        showToast('已导出 merge-game.html！', '#27ae60');
+    }
+}
+
+/* ─────────────────────────────────────────────
+   启动（自动加载本地保存的配置）
+   ───────────────────────────────────────────── */
+function loadConfig() {
+    try {
+        const saved = localStorage.getItem('mergeGameConfig');
+        if (saved) return Object.assign({}, GAME_CONFIG, JSON.parse(saved));
+    } catch(e) {}
+    return GAME_CONFIG;
+}
+const game = new MergeGame(loadConfig());
+const devPanel = new DevPanel(game, GAME_CONFIG);
+
+// 屏幕旋转/尺寸变化时重建棋盘布局
+window.addEventListener('resize', () => {
+    game._initBoard();
+    game.render();
+});
+</script>
+
+
+</body></html>
