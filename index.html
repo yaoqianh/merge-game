@@ -39,105 +39,107 @@
         .stat { text-align: center; }
         .stat-val { font-weight: bold; color: var(--accent-color); font-size: 1.1em; }
 
-        /* 倒计时 */
-        .timer-stat { display: flex; align-items: center; gap: 6px; }
-        #timer-display { font-size: 1.2em; font-variant-numeric: tabular-nums; min-width: 52px; }
-        #timer-display.timer-warning { color: #e74c3c; animation: timer-blink 1s step-end infinite; }
-        @keyframes timer-blink { 50% { opacity: 0.4; } }
-        #timer-btn {
-            background: var(--accent-color);
-            color: white;
-            border: none;
-            border-radius: 5px;
-            padding: 3px 7px;
-            font-size: 14px;
-            cursor: pointer;
-            line-height: 1;
-        }
-        #timer-btn:hover { opacity: 0.8; }
-        /* 遮罩：暂停/结束时覆盖棋盘阻止交互 */
-        #board-mask {
-            display: none;
-            position: absolute;
-            inset: 0;
-            z-index: 50;
-            border-radius: 8px;
-        }
-        #board-mask.active { display: block; }
-        /* 时间结束提示 */
-        #timesup-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.65);
-            z-index: 9998;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            gap: 16px;
-        }
-        #timesup-overlay.show { display: flex; }
-        #timesup-overlay .ts-title { color: #fff; font-size: 32px; font-weight: bold; }
-        #timesup-overlay .ts-score { color: #ffd700; font-size: 20px; }
-        #timesup-overlay button {
-            padding: 10px 28px; font-size: 16px; border: none;
-            border-radius: 8px; background: #e74c3c; color: white;
+        /* 保存/读取按钮（状态栏） */
+        #save-load-btn {
+            background: var(--accent-color); color: white;
+            border: none; border-radius: 5px;
+            padding: 4px 10px; font-size: 13px;
             cursor: pointer; font-weight: bold;
         }
+        #save-load-btn:hover { opacity: 0.82; }
         /* 开始游戏模态框 */
         #start-modal {
-            display: flex;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.75);
-            z-index: 9999;
-            justify-content: center;
-            align-items: center;
+            display: flex; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.78); z-index: 9999;
+            justify-content: center; align-items: center;
         }
         .sm-box {
-            background: white;
-            border-radius: 16px;
-            padding: 32px 40px;
-            text-align: center;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-            min-width: 280px;
+            background: #1a1a2e; border-radius: 16px;
+            padding: 28px 32px; text-align: center;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            min-width: 290px; max-width: 340px; width: 90vw;
+            border: 1px solid #0f3460;
         }
-        .sm-title { font-size: 32px; font-weight: bold; color: var(--accent-color); margin-bottom: 6px; }
-        .sm-sub { font-size: 13px; color: #888; margin-bottom: 20px; }
+        .sm-title { font-size: 30px; font-weight: bold; color: var(--accent-color); margin-bottom: 4px; }
+        .sm-sub { font-size: 12px; color: #888; margin-bottom: 18px; }
         .sm-box input[type="text"] {
-            width: 100%; padding: 10px 14px; font-size: 16px;
-            border: 2px solid #ddd; border-radius: 8px; outline: none;
-            box-sizing: border-box; margin-bottom: 16px; text-align: center;
+            width: 100%; padding: 9px 12px; font-size: 15px;
+            border: 2px solid #0f3460; border-radius: 8px; outline: none;
+            box-sizing: border-box; margin-bottom: 12px; text-align: center;
+            background: #16213e; color: #eee;
         }
         .sm-box input[type="text"]:focus { border-color: var(--accent-color); }
-        .sm-box button {
-            width: 100%; padding: 12px; font-size: 16px; font-weight: bold;
+        .sm-btn-primary {
+            width: 100%; padding: 11px; font-size: 15px; font-weight: bold;
             background: var(--accent-color); color: white; border: none;
+            border-radius: 8px; cursor: pointer; margin-bottom: 8px;
+        }
+        .sm-btn-primary:hover { opacity: 0.85; }
+        .sm-btn-secondary {
+            width: 100%; padding: 9px; font-size: 14px;
+            background: #16213e; color: #a0b4cc; border: 1px solid #0f3460;
             border-radius: 8px; cursor: pointer;
         }
-        .sm-box button:hover { opacity: 0.85; }
-        /* 排行榜 */
-        .leaderboard {
-            width: 100%; max-width: 340px; background: rgba(255,255,255,0.08);
-            border-radius: 10px; padding: 4px 0; margin: 0 auto;
+        .sm-btn-secondary:hover { background: #0f3460; color: #eee; }
+        /* 存档槽列表 */
+        #sm-save-slots { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+        .sm-slot {
+            display: flex; align-items: center; gap: 6px;
+            background: #16213e; border: 1px solid #0f3460;
+            border-radius: 8px; padding: 7px 10px; cursor: pointer;
+            transition: border-color 0.15s;
         }
-        .lb-header {
-            text-align: center; color: rgba(255,255,255,0.7);
-            font-size: 13px; font-weight: bold; padding: 6px 0 4px;
-            letter-spacing: 1px;
+        .sm-slot:hover { border-color: var(--accent-color); }
+        .sm-slot-num { font-size: 12px; color: #666; min-width: 18px; }
+        .sm-slot-info { flex: 1; text-align: left; }
+        .sm-slot-name { font-size: 13px; color: #eee; font-weight: bold; }
+        .sm-slot-meta { font-size: 11px; color: #888; }
+        .sm-slot-empty .sm-slot-name { color: #555; font-weight: normal; font-style: italic; }
+        /* 存档/读取弹窗 */
+        #saveload-modal {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.72); z-index: 9998;
+            justify-content: center; align-items: center;
         }
-        .lb-row {
-            display: flex; align-items: center;
-            padding: 5px 14px; gap: 8px;
-            color: white; font-size: 13px;
-            border-bottom: 1px solid rgba(255,255,255,0.07);
+        #saveload-modal.show { display: flex; }
+        .sl-box {
+            background: #1a1a2e; border-radius: 14px;
+            padding: 24px 28px; min-width: 290px; max-width: 360px; width: 92vw;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5); border: 1px solid #0f3460;
         }
-        .lb-row:last-child { border-bottom: none; }
-        .lb-row.highlight { background: rgba(255,215,0,0.2); font-weight: bold; }
-        .lb-rank { min-width: 28px; font-size: 15px; }
-        .lb-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .lb-score { color: #ffd700; font-weight: bold; min-width: 48px; text-align: right; }
-        .lb-date { font-size: 11px; color: rgba(255,255,255,0.45); min-width: 68px; text-align: right; }
+        .sl-title { font-size: 18px; font-weight: bold; color: var(--accent-color); margin-bottom: 14px; text-align: center; }
+        .sl-tabs { display: flex; gap: 6px; margin-bottom: 12px; }
+        .sl-tab {
+            flex: 1; padding: 7px; font-size: 13px; border-radius: 7px;
+            border: 1px solid #0f3460; background: #16213e; color: #a0b4cc; cursor: pointer;
+        }
+        .sl-tab.active { background: var(--accent-color); color: white; border-color: var(--accent-color); }
+        #sl-slots { display: flex; flex-direction: column; gap: 7px; }
+        .sl-slot {
+            display: flex; align-items: center; gap: 8px;
+            background: #16213e; border: 1px solid #0f3460;
+            border-radius: 8px; padding: 8px 10px;
+        }
+        .sl-slot-num { font-size: 12px; color: #666; min-width: 20px; text-align: center; }
+        .sl-slot-info { flex: 1; }
+        .sl-slot-name { font-size: 13px; color: #eee; font-weight: bold; }
+        .sl-slot-meta { font-size: 11px; color: #888; }
+        .sl-slot-empty .sl-slot-name { color: #555; font-style: italic; font-weight: normal; }
+        .sl-slot-actions { display: flex; gap: 4px; }
+        .sl-btn {
+            padding: 4px 8px; font-size: 11px; border-radius: 5px; border: none;
+            cursor: pointer; font-weight: bold;
+        }
+        .sl-btn-action { background: var(--accent-color); color: white; }
+        .sl-btn-action:hover { opacity: 0.82; }
+        .sl-btn-del { background: #2a1a1a; color: #e74c3c; border: 1px solid #e74c3c; }
+        .sl-btn-del:hover { background: #e74c3c; color: white; }
+        .sl-close-row { text-align: center; margin-top: 14px; }
+        .sl-close-row button {
+            padding: 8px 28px; font-size: 13px; border-radius: 7px;
+            background: #16213e; color: #a0b4cc; border: 1px solid #0f3460; cursor: pointer;
+        }
+        .sl-close-row button:hover { background: #0f3460; color: #eee; }
 
         /* 三列游戏区域 */
         #game-area {
@@ -350,7 +352,6 @@
             color: #e94560;
             letter-spacing: 1px;
             text-transform: uppercase;
-            margin-bottom: 6px;
         }
         .order-items {
             display: flex;
@@ -403,6 +404,42 @@
             transition: opacity 0.2s;
         }
         .order-card.fulfillable:hover .order-fulfill-hint { opacity: 1; }
+
+        /* 刷新次数显示（标题旁） */
+        .order-refresh-remain {
+            font-size: 10px;
+            color: #a0b4cc;
+            font-weight: normal;
+        }
+        .order-refresh-remain b { color: #3498db; }
+
+        /* 订单卡片标题行 */
+        .order-card-titlerow {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+        /* 单卡刷新按钮 */
+        .order-card-refresh {
+            font-size: 10px;
+            padding: 1px 6px;
+            border: 1px solid #3498db;
+            border-radius: 5px;
+            background: rgba(52,152,219,0.15);
+            color: #3498db;
+            cursor: pointer;
+            transition: background 0.15s;
+            flex-shrink: 0;
+        }
+        .order-card-refresh:hover { background: rgba(52,152,219,0.35); }
+        .order-card-refresh.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            border-color: #666;
+            color: #666;
+            background: none;
+        }
 
         /* 触摸拖拽幽灵元素 */
         #touch-ghost {
@@ -656,53 +693,112 @@
 <body>
 
 <div id="status-bar">
-    <div class="stat">电量: <span id="energy-val" class="stat-val">0</span> / <span id="max-energy">0</span></div>
-    <div class="stat timer-stat">
-        <span id="timer-display" class="stat-val">30:00</span>
-        <button id="timer-btn" title="暂停/继续">⏸</button>
+    <div class="stat">电量: <span id="energy-val" class="stat-val">503</span> / <span id="max-energy">999</span></div>
+    <div class="stat">
+        <button id="save-load-btn" onclick="openSaveLoad()">保存/读取</button>
     </div>
     <div class="stat">胜利点数: <span id="coin-val" class="stat-val">0</span></div>
 </div>
 
 <div id="game-area">
-<div id="order-bar"><div class="side-label">巴拉订单</div><div class="order-card"><div class="order-card-title">巴拉订单 #1</div><div class="order-items"><div class="order-item-row">
-                <div class="order-item-icon"><img src="https://i.ibb.co/NgVGHp4C/image.png" alt="item" onerror="this.style.opacity='0.3'"></div>
-                <div class="order-item-desc">Lv.4 巴四</div>
-                <div class="order-item-check">✓</div>
-            </div><div class="order-item-row">
-                <div class="order-item-icon"><img src="https://i.ibb.co/DHXrKG0j/z4.png" alt="item" onerror="this.style.opacity='0.3'"></div>
-                <div class="order-item-desc">Lv.4 芝士</div>
-                <div class="order-item-check">✓</div>
-            </div></div><div class="order-reward">奖励 +1 胜利点数</div><div class="order-fulfill-hint">点击完成订单</div></div><div class="order-card"><div class="order-card-title">巴拉订单 #2</div><div class="order-items"><div class="order-item-row">
-                <div class="order-item-icon"><img src="https://i.ibb.co/1fGSG05z/z3.png" alt="item" onerror="this.style.opacity='0.3'"></div>
-                <div class="order-item-desc">Lv.3 芝小猪</div>
+<div id="order-bar"><div class="side-label">巴拉订单 <span class="order-refresh-remain">(刷新 <b>3</b> 次)</span></div><div class="order-card"><div class="order-card-titlerow"><div class="order-card-title">订单 #1</div><button class="order-card-refresh" title="刷新此订单">刷新</button></div><div class="order-items"><div class="order-item-row">
+                <div class="order-item-icon"><img src="https://i.ibb.co/zhc4k1V2/z6.png" alt="item" onerror="this.style.opacity='0.3'"></div>
+                <div class="order-item-desc">Lv.6 芝大猪</div>
                 <div class="order-item-check">✓</div>
             </div><div class="order-item-row">
                 <div class="order-item-icon"><img src="https://i.ibb.co/SXyWhSjy/j5.png" alt="item" onerror="this.style.opacity='0.3'"></div>
                 <div class="order-item-desc">Lv.5 大花卷</div>
                 <div class="order-item-check">✓</div>
-            </div></div><div class="order-reward">奖励 +1 胜利点数</div><div class="order-fulfill-hint">点击完成订单</div></div><div class="order-card"><div class="order-card-title">巴拉订单 #3</div><div class="order-items"><div class="order-item-row">
-                <div class="order-item-icon"><img src="https://i.ibb.co/DHXrKG0j/z4.png" alt="item" onerror="this.style.opacity='0.3'"></div>
-                <div class="order-item-desc">Lv.4 芝士</div>
+            </div><div class="order-item-row">
+                <div class="order-item-icon"><img src="https://i.ibb.co/zhc4k1V2/z6.png" alt="item" onerror="this.style.opacity='0.3'"></div>
+                <div class="order-item-desc">Lv.6 芝大猪</div>
+                <div class="order-item-check">✓</div>
+            </div></div><div class="order-reward">奖励 +16 胜利点数</div><div class="order-fulfill-hint">点击完成订单</div></div><div class="order-card"><div class="order-card-titlerow"><div class="order-card-title">订单 #2</div><button class="order-card-refresh" title="刷新此订单">刷新</button></div><div class="order-items"><div class="order-item-row">
+                <div class="order-item-icon"><img src="https://i.ibb.co/gZprHfQn/image.png" alt="item" onerror="this.style.opacity='0.3'"></div>
+                <div class="order-item-desc">Lv.5 獭五</div>
+                <div class="order-item-check">✓</div>
+            </div><div class="order-item-row">
+                <div class="order-item-icon"><img src="https://i.ibb.co/20PVwLkt/image.png" alt="item" onerror="this.style.opacity='0.3'"></div>
+                <div class="order-item-desc">Lv.4 獭四</div>
                 <div class="order-item-check">✓</div>
             </div><div class="order-item-row">
                 <div class="order-item-icon"><img src="https://i.ibb.co/PsV09Qq5/image.png" alt="item" onerror="this.style.opacity='0.3'"></div>
                 <div class="order-item-desc">Lv.5 巴五</div>
                 <div class="order-item-check">✓</div>
-            </div></div><div class="order-reward">奖励 +1 胜利点数</div><div class="order-fulfill-hint">点击完成订单</div></div></div>
-<div id="board" style="grid-template-columns: repeat(7, 82px);"><div class="cell" data-index="0" draggable="true"><div class="item generator" style="background-color: rgb(255, 249, 196);"><img src="https://i.ibb.co/67Rxrg9F/jc1.png" alt="item" onerror="this.style.opacity='0.3'"><div class="item-label">新卷</div><div class="gen-lv-badge gen-lv-0">Lv.0</div></div></div><div class="cell" data-index="1" draggable="true"></div><div class="cell" data-index="2" draggable="true"></div><div class="cell" data-index="3" draggable="true"></div><div class="cell" data-index="4" draggable="true"></div><div class="cell" data-index="5" draggable="true"></div><div class="cell" data-index="6" draggable="true"><div class="item generator" style="background-color: rgb(245, 245, 245);"><img src="https://i.ibb.co/sdvXyK46/zc1.png" alt="item" onerror="this.style.opacity='0.3'"><div class="item-label">猪床</div><div class="gen-lv-badge gen-lv-0">Lv.0</div></div></div><div class="cell" data-index="7" draggable="true"></div><div class="cell" data-index="8" draggable="true"></div><div class="cell" data-index="9" draggable="true"></div><div class="cell" data-index="10" draggable="true"><div class="item" style="background-color: rgb(232, 245, 233);">
+            </div></div><div class="order-reward">奖励 +10 胜利点数</div><div class="order-fulfill-hint">点击完成订单</div></div><div class="order-card"><div class="order-card-titlerow"><div class="order-card-title">订单 #3</div><button class="order-card-refresh" title="刷新此订单">刷新</button></div><div class="order-items"><div class="order-item-row">
+                <div class="order-item-icon"><img src="https://i.ibb.co/SXyWhSjy/j5.png" alt="item" onerror="this.style.opacity='0.3'"></div>
+                <div class="order-item-desc">Lv.5 大花卷</div>
+                <div class="order-item-check">✓</div>
+            </div><div class="order-item-row">
+                <div class="order-item-icon"><img src="https://i.ibb.co/NgVGHp4C/image.png" alt="item" onerror="this.style.opacity='0.3'"></div>
+                <div class="order-item-desc">Lv.4 巴四</div>
+                <div class="order-item-check">✓</div>
+            </div><div class="order-item-row">
+                <div class="order-item-icon"><img src="https://i.ibb.co/rNKDNRp/j6.png" alt="item" onerror="this.style.opacity='0.3'"></div>
+                <div class="order-item-desc">Lv.6 太阳花卷</div>
+                <div class="order-item-check">✓</div>
+            </div></div><div class="order-reward">奖励 +12 胜利点数</div><div class="order-fulfill-hint">点击完成订单</div></div></div>
+<div id="board" style="grid-template-columns: repeat(7, 82px);"><div class="cell" data-index="0" draggable="true"><div class="item generator" style="background-color: rgb(255, 249, 196);"><img src="https://i.ibb.co/67Rxrg9F/jc1.png" alt="item" onerror="this.style.opacity='0.3'"><div class="item-label">新卷</div><div class="gen-lv-badge gen-lv-0">Lv.0</div></div></div><div class="cell" data-index="1" draggable="true"><div class="item" style="background-color: rgb(232, 245, 233);">
+                    <img src="https://i.ibb.co/Z6b5T6Kq/j1.png" alt="item" onerror="this.style.opacity='0.3'">
+                    <div class="item-label">Lv.1<br>花卷宝宝</div>
+                </div></div><div class="cell" data-index="2" draggable="true"><div class="item" style="background-color: rgb(232, 245, 233);">
+                    <img src="https://i.ibb.co/Z6b5T6Kq/j1.png" alt="item" onerror="this.style.opacity='0.3'">
+                    <div class="item-label">Lv.1<br>花卷宝宝</div>
+                </div></div><div class="cell" data-index="3" draggable="true"><div class="item" style="background-color: rgb(232, 245, 233);">
+                    <img src="https://i.ibb.co/Z6b5T6Kq/j1.png" alt="item" onerror="this.style.opacity='0.3'">
+                    <div class="item-label">Lv.1<br>花卷宝宝</div>
+                </div></div><div class="cell" data-index="4" draggable="true"><div class="item" style="background-color: rgb(232, 245, 233);">
+                    <img src="https://i.ibb.co/Z6b5T6Kq/j1.png" alt="item" onerror="this.style.opacity='0.3'">
+                    <div class="item-label">Lv.1<br>花卷宝宝</div>
+                </div></div><div class="cell" data-index="5" draggable="true"><div class="item" style="background-color: rgb(232, 245, 233);">
+                    <img src="https://i.ibb.co/Z6b5T6Kq/j1.png" alt="item" onerror="this.style.opacity='0.3'">
+                    <div class="item-label">Lv.1<br>花卷宝宝</div>
+                </div></div><div class="cell" data-index="6" draggable="true"><div class="item generator" style="background-color: rgb(245, 245, 245);"><img src="https://i.ibb.co/sdvXyK46/zc1.png" alt="item" onerror="this.style.opacity='0.3'"><div class="item-label">猪床</div><div class="gen-lv-badge gen-lv-0">Lv.0</div></div></div><div class="cell" data-index="7" draggable="true"><div class="item" style="background-color: rgb(232, 245, 233);">
+                    <img src="https://i.ibb.co/Z6b5T6Kq/j1.png" alt="item" onerror="this.style.opacity='0.3'">
+                    <div class="item-label">Lv.1<br>花卷宝宝</div>
+                </div></div><div class="cell" data-index="8" draggable="true"><div class="item" style="background-color: rgb(232, 245, 233);">
+                    <img src="https://i.ibb.co/Z6b5T6Kq/j1.png" alt="item" onerror="this.style.opacity='0.3'">
+                    <div class="item-label">Lv.1<br>花卷宝宝</div>
+                </div></div><div class="cell" data-index="9" draggable="true"><div class="item" style="background-color: rgb(232, 245, 233);">
+                    <img src="https://i.ibb.co/Z6b5T6Kq/j1.png" alt="item" onerror="this.style.opacity='0.3'">
+                    <div class="item-label">Lv.1<br>花卷宝宝</div>
+                </div></div><div class="cell" data-index="10" draggable="true"><div class="item" style="background-color: rgb(232, 245, 233);">
                     <img src="https://i.ibb.co/Z6b5T6Kq/j1.png" alt="item" onerror="this.style.opacity='0.3'">
                     <div class="item-label">Lv.1<br>花卷宝宝</div>
                 </div></div><div class="cell" data-index="11" draggable="true"><div class="item" style="background-color: rgb(232, 245, 233);">
                     <img src="https://i.ibb.co/Z6b5T6Kq/j1.png" alt="item" onerror="this.style.opacity='0.3'">
                     <div class="item-label">Lv.1<br>花卷宝宝</div>
-                </div></div><div class="cell" data-index="12" draggable="true"></div><div class="cell" data-index="13" draggable="true"></div><div class="cell" data-index="14" draggable="true"></div><div class="cell" data-index="15" draggable="true"></div><div class="cell" data-index="16" draggable="true"><div class="item" style="background-color: rgb(232, 245, 233);">
+                </div></div><div class="cell" data-index="12" draggable="true"></div><div class="cell" data-index="13" draggable="true"></div><div class="cell" data-index="14" draggable="true"><div class="item" style="background-color: rgb(232, 245, 233);">
                     <img src="https://i.ibb.co/Z6b5T6Kq/j1.png" alt="item" onerror="this.style.opacity='0.3'">
                     <div class="item-label">Lv.1<br>花卷宝宝</div>
-                </div></div><div class="cell" data-index="17" draggable="true"></div><div class="cell" data-index="18" draggable="true"></div><div class="cell" data-index="19" draggable="true"></div><div class="cell" data-index="20" draggable="true"></div><div class="cell" data-index="21" draggable="true"></div><div class="cell" data-index="22" draggable="true"></div><div class="cell" data-index="23" draggable="true"></div><div class="cell" data-index="24" draggable="true"></div><div class="cell" data-index="25" draggable="true"></div><div class="cell" data-index="26" draggable="true"></div><div class="cell" data-index="27" draggable="true"></div><div class="cell" data-index="28" draggable="true"></div><div class="cell" data-index="29" draggable="true"></div><div class="cell" data-index="30" draggable="true"></div><div class="cell" data-index="31" draggable="true"></div><div class="cell" data-index="32" draggable="true"></div><div class="cell" data-index="33" draggable="true"></div><div class="cell" data-index="34" draggable="true"></div><div class="cell" data-index="35" draggable="true"></div><div class="cell" data-index="36" draggable="true"></div><div class="cell" data-index="37" draggable="true"></div><div class="cell" data-index="38" draggable="true"></div><div class="cell" data-index="39" draggable="true"></div><div class="cell" data-index="40" draggable="true"><div class="item" style="background-color: rgb(232, 245, 233);">
+                </div></div><div class="cell" data-index="15" draggable="true"><div class="item" style="background-color: rgb(232, 245, 233);">
                     <img src="https://i.ibb.co/Z6b5T6Kq/j1.png" alt="item" onerror="this.style.opacity='0.3'">
                     <div class="item-label">Lv.1<br>花卷宝宝</div>
-                </div></div><div class="cell" data-index="41" draggable="true"></div><div class="cell" data-index="42" draggable="true"><div class="item generator" style="background-color: rgb(252, 228, 236);"><img src="https://i.ibb.co/sJ69Xqyx/image.png" alt="item" onerror="this.style.opacity='0.3'"><div class="item-label">寻獭</div><div class="gen-lv-badge gen-lv-0">Lv.0</div></div></div><div class="cell" data-index="43" draggable="true"></div><div class="cell" data-index="44" draggable="true"></div><div class="cell" data-index="45" draggable="true"></div><div class="cell" data-index="46" draggable="true"></div><div class="cell" data-index="47" draggable="true"></div><div class="cell" data-index="48" draggable="true"><div class="item generator" style="background-color: rgb(255, 248, 225);"><img src="https://i.ibb.co/CpQ312WJ/image.png" alt="item" onerror="this.style.opacity='0.3'"><div class="item-label">芭乐吉</div><div class="gen-lv-badge gen-lv-0">Lv.0</div></div></div></div>
+                </div></div><div class="cell" data-index="16" draggable="true"><div class="item" style="background-color: rgb(232, 245, 233);">
+                    <img src="https://i.ibb.co/Z6b5T6Kq/j1.png" alt="item" onerror="this.style.opacity='0.3'">
+                    <div class="item-label">Lv.1<br>花卷宝宝</div>
+                </div></div><div class="cell" data-index="17" draggable="true"><div class="item" style="background-color: rgb(232, 245, 233);">
+                    <img src="https://i.ibb.co/Z6b5T6Kq/j1.png" alt="item" onerror="this.style.opacity='0.3'">
+                    <div class="item-label">Lv.1<br>花卷宝宝</div>
+                </div></div><div class="cell" data-index="18" draggable="true"></div><div class="cell" data-index="19" draggable="true"></div><div class="cell" data-index="20" draggable="true"></div><div class="cell" data-index="21" draggable="true"><div class="item" style="background-color: rgb(232, 245, 233);">
+                    <img src="https://i.ibb.co/Z6b5T6Kq/j1.png" alt="item" onerror="this.style.opacity='0.3'">
+                    <div class="item-label">Lv.1<br>花卷宝宝</div>
+                </div></div><div class="cell" data-index="22" draggable="true"><div class="item" style="background-color: rgb(232, 245, 233);">
+                    <img src="https://i.ibb.co/Z6b5T6Kq/j1.png" alt="item" onerror="this.style.opacity='0.3'">
+                    <div class="item-label">Lv.1<br>花卷宝宝</div>
+                </div></div><div class="cell" data-index="23" draggable="true"><div class="item" style="background-color: rgb(232, 245, 233);">
+                    <img src="https://i.ibb.co/Z6b5T6Kq/j1.png" alt="item" onerror="this.style.opacity='0.3'">
+                    <div class="item-label">Lv.1<br>花卷宝宝</div>
+                </div></div><div class="cell" data-index="24" draggable="true"></div><div class="cell" data-index="25" draggable="true"></div><div class="cell" data-index="26" draggable="true"></div><div class="cell" data-index="27" draggable="true"></div><div class="cell" data-index="28" draggable="true"><div class="item" style="background-color: rgb(232, 245, 233);">
+                    <img src="https://i.ibb.co/Z6b5T6Kq/j1.png" alt="item" onerror="this.style.opacity='0.3'">
+                    <div class="item-label">Lv.1<br>花卷宝宝</div>
+                </div></div><div class="cell" data-index="29" draggable="true"><div class="item" style="background-color: rgb(232, 245, 233);">
+                    <img src="https://i.ibb.co/Z6b5T6Kq/j1.png" alt="item" onerror="this.style.opacity='0.3'">
+                    <div class="item-label">Lv.1<br>花卷宝宝</div>
+                </div></div><div class="cell" data-index="30" draggable="true"></div><div class="cell" data-index="31" draggable="true"></div><div class="cell" data-index="32" draggable="true"></div><div class="cell" data-index="33" draggable="true"></div><div class="cell" data-index="34" draggable="true"></div><div class="cell" data-index="35" draggable="true"><div class="item" style="background-color: rgb(232, 245, 233);">
+                    <img src="https://i.ibb.co/Z6b5T6Kq/j1.png" alt="item" onerror="this.style.opacity='0.3'">
+                    <div class="item-label">Lv.1<br>花卷宝宝</div>
+                </div></div><div class="cell" data-index="36" draggable="true"></div><div class="cell" data-index="37" draggable="true"></div><div class="cell" data-index="38" draggable="true"></div><div class="cell" data-index="39" draggable="true"></div><div class="cell" data-index="40" draggable="true"></div><div class="cell" data-index="41" draggable="true"></div><div class="cell" data-index="42" draggable="true"><div class="item generator" style="background-color: rgb(252, 228, 236);"><img src="https://i.ibb.co/sJ69Xqyx/image.png" alt="item" onerror="this.style.opacity='0.3'"><div class="item-label">寻獭</div><div class="gen-lv-badge gen-lv-0">Lv.0</div></div></div><div class="cell" data-index="43" draggable="true"></div><div class="cell" data-index="44" draggable="true"></div><div class="cell" data-index="45" draggable="true"></div><div class="cell" data-index="46" draggable="true"></div><div class="cell" data-index="47" draggable="true"></div><div class="cell" data-index="48" draggable="true"><div class="item generator" style="background-color: rgb(255, 248, 225);"><img src="https://i.ibb.co/CpQ312WJ/image.png" alt="item" onerror="this.style.opacity='0.3'"><div class="item-label">芭乐吉</div><div class="gen-lv-badge gen-lv-0">Lv.0</div></div></div></div>
 </div><!-- /#game-area -->
 
 <div id="controls">
@@ -716,7 +812,7 @@
 <button id="dev-toggle" title="开发者面板">开发者面板</button>
 
 <!-- 开发者面板 -->
-<div id="dev-panel">
+<div id="dev-panel" class="open">
     <div class="dp-header">
         <span>开发者后台</span>
         <button class="dp-close" id="dp-close">✕</button>
@@ -761,10 +857,6 @@
     <div class="dp-section">
         <div class="dp-section-title">胜利条件</div>
         <div class="dp-field">
-            <label>单局游戏时长（秒）</label>
-            <input type="number" id="dp-gameDuration" min="10" step="30">
-        </div>
-        <div class="dp-field">
             <label>目标胜利点数</label>
             <input type="number" id="dp-victoryTarget" min="1">
         </div>
@@ -780,7 +872,7 @@
 
     <div class="dp-section">
         <div class="dp-section-title">链条 &amp; 物品配置</div>
-        <div id="dp-chains-container"><div style="margin-bottom: 14px;"><div class="dp-chain-title">植物类 (plant)</div><div class="dp-item-row" style="grid-template-columns: 1fr;"><div class="dp-sub-title" style="margin: 0px 0px 2px;">生成器点击音效</div><input type="text" placeholder="https://... 或 ./audio/spawn.ogg" data-chain="plant" data-field="spawnSound" data-section="chainRoot"></div><div class="dp-sub-title">生成器等级素材 (Lv.0~3)</div><div class="dp-col-headers"><span>等级</span><span>名称/标签</span><span>图标 / 图片路径</span></div><div class="dp-item-row"><div class="lv">G0</div><input type="text" placeholder="生成器名称" data-chain="plant" data-idx="0" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="plant" data-idx="0" data-field="icon" data-section="generatorLevels"></div><div class="dp-item-row"><div class="lv">G1</div><input type="text" placeholder="生成器名称" data-chain="plant" data-idx="1" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="plant" data-idx="1" data-field="icon" data-section="generatorLevels"></div><div class="dp-item-row"><div class="lv">G2</div><input type="text" placeholder="生成器名称" data-chain="plant" data-idx="2" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="plant" data-idx="2" data-field="icon" data-section="generatorLevels"></div><div class="dp-item-row"><div class="lv">G3</div><input type="text" placeholder="生成器名称" data-chain="plant" data-idx="3" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="plant" data-idx="3" data-field="icon" data-section="generatorLevels"></div><div class="dp-sub-title" style="margin-top: 8px;">合成链物品 (Lv.1~6)</div><div class="dp-col-headers"><span>等级</span><span>物品名称</span><span>图标 / 图片路径</span></div><div class="dp-item-row"><div class="lv">Lv1</div><input type="text" placeholder="物品名称" data-chain="plant" data-idx="0" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="plant" data-idx="0" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv2</div><input type="text" placeholder="物品名称" data-chain="plant" data-idx="1" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="plant" data-idx="1" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv3</div><input type="text" placeholder="物品名称" data-chain="plant" data-idx="2" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="plant" data-idx="2" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv4</div><input type="text" placeholder="物品名称" data-chain="plant" data-idx="3" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="plant" data-idx="3" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv5</div><input type="text" placeholder="物品名称" data-chain="plant" data-idx="4" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="plant" data-idx="4" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv6</div><input type="text" placeholder="物品名称" data-chain="plant" data-idx="5" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="plant" data-idx="5" data-field="icon" data-section="items"></div></div><div style="margin-bottom: 14px;"><div class="dp-chain-title">工具类 (tool)</div><div class="dp-item-row" style="grid-template-columns: 1fr;"><div class="dp-sub-title" style="margin: 0px 0px 2px;">生成器点击音效</div><input type="text" placeholder="https://... 或 ./audio/spawn.ogg" data-chain="tool" data-field="spawnSound" data-section="chainRoot"></div><div class="dp-sub-title">生成器等级素材 (Lv.0~3)</div><div class="dp-col-headers"><span>等级</span><span>名称/标签</span><span>图标 / 图片路径</span></div><div class="dp-item-row"><div class="lv">G0</div><input type="text" placeholder="生成器名称" data-chain="tool" data-idx="0" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="tool" data-idx="0" data-field="icon" data-section="generatorLevels"></div><div class="dp-item-row"><div class="lv">G1</div><input type="text" placeholder="生成器名称" data-chain="tool" data-idx="1" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="tool" data-idx="1" data-field="icon" data-section="generatorLevels"></div><div class="dp-item-row"><div class="lv">G2</div><input type="text" placeholder="生成器名称" data-chain="tool" data-idx="2" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="tool" data-idx="2" data-field="icon" data-section="generatorLevels"></div><div class="dp-item-row"><div class="lv">G3</div><input type="text" placeholder="生成器名称" data-chain="tool" data-idx="3" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="tool" data-idx="3" data-field="icon" data-section="generatorLevels"></div><div class="dp-sub-title" style="margin-top: 8px;">合成链物品 (Lv.1~6)</div><div class="dp-col-headers"><span>等级</span><span>物品名称</span><span>图标 / 图片路径</span></div><div class="dp-item-row"><div class="lv">Lv1</div><input type="text" placeholder="物品名称" data-chain="tool" data-idx="0" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="tool" data-idx="0" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv2</div><input type="text" placeholder="物品名称" data-chain="tool" data-idx="1" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="tool" data-idx="1" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv3</div><input type="text" placeholder="物品名称" data-chain="tool" data-idx="2" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="tool" data-idx="2" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv4</div><input type="text" placeholder="物品名称" data-chain="tool" data-idx="3" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="tool" data-idx="3" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv5</div><input type="text" placeholder="物品名称" data-chain="tool" data-idx="4" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="tool" data-idx="4" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv6</div><input type="text" placeholder="物品名称" data-chain="tool" data-idx="5" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="tool" data-idx="5" data-field="icon" data-section="items"></div></div><div style="margin-bottom: 14px;"><div class="dp-chain-title">宝石类 (gem)</div><div class="dp-item-row" style="grid-template-columns: 1fr;"><div class="dp-sub-title" style="margin: 0px 0px 2px;">生成器点击音效</div><input type="text" placeholder="https://... 或 ./audio/spawn.ogg" data-chain="gem" data-field="spawnSound" data-section="chainRoot"></div><div class="dp-sub-title">生成器等级素材 (Lv.0~3)</div><div class="dp-col-headers"><span>等级</span><span>名称/标签</span><span>图标 / 图片路径</span></div><div class="dp-item-row"><div class="lv">G0</div><input type="text" placeholder="生成器名称" data-chain="gem" data-idx="0" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="gem" data-idx="0" data-field="icon" data-section="generatorLevels"></div><div class="dp-item-row"><div class="lv">G1</div><input type="text" placeholder="生成器名称" data-chain="gem" data-idx="1" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="gem" data-idx="1" data-field="icon" data-section="generatorLevels"></div><div class="dp-item-row"><div class="lv">G2</div><input type="text" placeholder="生成器名称" data-chain="gem" data-idx="2" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="gem" data-idx="2" data-field="icon" data-section="generatorLevels"></div><div class="dp-item-row"><div class="lv">G3</div><input type="text" placeholder="生成器名称" data-chain="gem" data-idx="3" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="gem" data-idx="3" data-field="icon" data-section="generatorLevels"></div><div class="dp-sub-title" style="margin-top: 8px;">合成链物品 (Lv.1~6)</div><div class="dp-col-headers"><span>等级</span><span>物品名称</span><span>图标 / 图片路径</span></div><div class="dp-item-row"><div class="lv">Lv1</div><input type="text" placeholder="物品名称" data-chain="gem" data-idx="0" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="gem" data-idx="0" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv2</div><input type="text" placeholder="物品名称" data-chain="gem" data-idx="1" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="gem" data-idx="1" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv3</div><input type="text" placeholder="物品名称" data-chain="gem" data-idx="2" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="gem" data-idx="2" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv4</div><input type="text" placeholder="物品名称" data-chain="gem" data-idx="3" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="gem" data-idx="3" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv5</div><input type="text" placeholder="物品名称" data-chain="gem" data-idx="4" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="gem" data-idx="4" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv6</div><input type="text" placeholder="物品名称" data-chain="gem" data-idx="5" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="gem" data-idx="5" data-field="icon" data-section="items"></div></div><div style="margin-bottom: 14px;"><div class="dp-chain-title">食物类 (food)</div><div class="dp-item-row" style="grid-template-columns: 1fr;"><div class="dp-sub-title" style="margin: 0px 0px 2px;">生成器点击音效</div><input type="text" placeholder="https://... 或 ./audio/spawn.ogg" data-chain="food" data-field="spawnSound" data-section="chainRoot"></div><div class="dp-sub-title">生成器等级素材 (Lv.0~3)</div><div class="dp-col-headers"><span>等级</span><span>名称/标签</span><span>图标 / 图片路径</span></div><div class="dp-item-row"><div class="lv">G0</div><input type="text" placeholder="生成器名称" data-chain="food" data-idx="0" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="food" data-idx="0" data-field="icon" data-section="generatorLevels"></div><div class="dp-item-row"><div class="lv">G1</div><input type="text" placeholder="生成器名称" data-chain="food" data-idx="1" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="food" data-idx="1" data-field="icon" data-section="generatorLevels"></div><div class="dp-item-row"><div class="lv">G2</div><input type="text" placeholder="生成器名称" data-chain="food" data-idx="2" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="food" data-idx="2" data-field="icon" data-section="generatorLevels"></div><div class="dp-item-row"><div class="lv">G3</div><input type="text" placeholder="生成器名称" data-chain="food" data-idx="3" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="food" data-idx="3" data-field="icon" data-section="generatorLevels"></div><div class="dp-sub-title" style="margin-top: 8px;">合成链物品 (Lv.1~6)</div><div class="dp-col-headers"><span>等级</span><span>物品名称</span><span>图标 / 图片路径</span></div><div class="dp-item-row"><div class="lv">Lv1</div><input type="text" placeholder="物品名称" data-chain="food" data-idx="0" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="food" data-idx="0" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv2</div><input type="text" placeholder="物品名称" data-chain="food" data-idx="1" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="food" data-idx="1" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv3</div><input type="text" placeholder="物品名称" data-chain="food" data-idx="2" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="food" data-idx="2" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv4</div><input type="text" placeholder="物品名称" data-chain="food" data-idx="3" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="food" data-idx="3" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv5</div><input type="text" placeholder="物品名称" data-chain="food" data-idx="4" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="food" data-idx="4" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv6</div><input type="text" placeholder="物品名称" data-chain="food" data-idx="5" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="food" data-idx="5" data-field="icon" data-section="items"></div></div></div>
+        <div id="dp-chains-container"><div style="margin-bottom: 14px;"><div class="dp-chain-title">植物类 (plant)</div><div class="dp-item-row" style="grid-template-columns: 1fr;"><div class="dp-sub-title" style="margin: 0px 0px 2px;">生成器点击音效</div><input type="text" placeholder="https://... 或 ./audio/spawn.ogg" data-chain="plant" data-field="spawnSound" data-section="chainRoot"></div><div class="dp-sub-title">生成器等级素材 (Lv.0~3)</div><div class="dp-col-headers"><span>等级</span><span>名称/标签</span><span>图标 / 图片路径</span></div><div class="dp-item-row"><div class="lv">G0</div><input type="text" placeholder="生成器名称" data-chain="plant" data-idx="0" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="plant" data-idx="0" data-field="icon" data-section="generatorLevels"></div><div class="dp-item-row"><div class="lv">G1</div><input type="text" placeholder="生成器名称" data-chain="plant" data-idx="1" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="plant" data-idx="1" data-field="icon" data-section="generatorLevels"></div><div class="dp-item-row"><div class="lv">G2</div><input type="text" placeholder="生成器名称" data-chain="plant" data-idx="2" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="plant" data-idx="2" data-field="icon" data-section="generatorLevels"></div><div class="dp-item-row"><div class="lv">G3</div><input type="text" placeholder="生成器名称" data-chain="plant" data-idx="3" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="plant" data-idx="3" data-field="icon" data-section="generatorLevels"></div><div class="dp-item-row"><div class="lv">G4</div><input type="text" placeholder="生成器名称" data-chain="plant" data-idx="4" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="plant" data-idx="4" data-field="icon" data-section="generatorLevels"></div><div class="dp-item-row"><div class="lv">G5</div><input type="text" placeholder="生成器名称" data-chain="plant" data-idx="5" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="plant" data-idx="5" data-field="icon" data-section="generatorLevels"></div><div class="dp-sub-title" style="margin-top: 8px;">合成链物品 (Lv.1~6)</div><div class="dp-col-headers"><span>等级</span><span>物品名称</span><span>图标 / 图片路径</span></div><div class="dp-item-row"><div class="lv">Lv1</div><input type="text" placeholder="物品名称" data-chain="plant" data-idx="0" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="plant" data-idx="0" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv2</div><input type="text" placeholder="物品名称" data-chain="plant" data-idx="1" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="plant" data-idx="1" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv3</div><input type="text" placeholder="物品名称" data-chain="plant" data-idx="2" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="plant" data-idx="2" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv4</div><input type="text" placeholder="物品名称" data-chain="plant" data-idx="3" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="plant" data-idx="3" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv5</div><input type="text" placeholder="物品名称" data-chain="plant" data-idx="4" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="plant" data-idx="4" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv6</div><input type="text" placeholder="物品名称" data-chain="plant" data-idx="5" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="plant" data-idx="5" data-field="icon" data-section="items"></div></div><div style="margin-bottom: 14px;"><div class="dp-chain-title">工具类 (tool)</div><div class="dp-item-row" style="grid-template-columns: 1fr;"><div class="dp-sub-title" style="margin: 0px 0px 2px;">生成器点击音效</div><input type="text" placeholder="https://... 或 ./audio/spawn.ogg" data-chain="tool" data-field="spawnSound" data-section="chainRoot"></div><div class="dp-sub-title">生成器等级素材 (Lv.0~3)</div><div class="dp-col-headers"><span>等级</span><span>名称/标签</span><span>图标 / 图片路径</span></div><div class="dp-item-row"><div class="lv">G0</div><input type="text" placeholder="生成器名称" data-chain="tool" data-idx="0" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="tool" data-idx="0" data-field="icon" data-section="generatorLevels"></div><div class="dp-item-row"><div class="lv">G1</div><input type="text" placeholder="生成器名称" data-chain="tool" data-idx="1" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="tool" data-idx="1" data-field="icon" data-section="generatorLevels"></div><div class="dp-item-row"><div class="lv">G2</div><input type="text" placeholder="生成器名称" data-chain="tool" data-idx="2" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="tool" data-idx="2" data-field="icon" data-section="generatorLevels"></div><div class="dp-item-row"><div class="lv">G3</div><input type="text" placeholder="生成器名称" data-chain="tool" data-idx="3" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="tool" data-idx="3" data-field="icon" data-section="generatorLevels"></div><div class="dp-item-row"><div class="lv">G4</div><input type="text" placeholder="生成器名称" data-chain="tool" data-idx="4" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="tool" data-idx="4" data-field="icon" data-section="generatorLevels"></div><div class="dp-item-row"><div class="lv">G5</div><input type="text" placeholder="生成器名称" data-chain="tool" data-idx="5" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="tool" data-idx="5" data-field="icon" data-section="generatorLevels"></div><div class="dp-sub-title" style="margin-top: 8px;">合成链物品 (Lv.1~6)</div><div class="dp-col-headers"><span>等级</span><span>物品名称</span><span>图标 / 图片路径</span></div><div class="dp-item-row"><div class="lv">Lv1</div><input type="text" placeholder="物品名称" data-chain="tool" data-idx="0" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="tool" data-idx="0" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv2</div><input type="text" placeholder="物品名称" data-chain="tool" data-idx="1" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="tool" data-idx="1" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv3</div><input type="text" placeholder="物品名称" data-chain="tool" data-idx="2" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="tool" data-idx="2" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv4</div><input type="text" placeholder="物品名称" data-chain="tool" data-idx="3" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="tool" data-idx="3" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv5</div><input type="text" placeholder="物品名称" data-chain="tool" data-idx="4" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="tool" data-idx="4" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv6</div><input type="text" placeholder="物品名称" data-chain="tool" data-idx="5" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="tool" data-idx="5" data-field="icon" data-section="items"></div></div><div style="margin-bottom: 14px;"><div class="dp-chain-title">宝石类 (gem)</div><div class="dp-item-row" style="grid-template-columns: 1fr;"><div class="dp-sub-title" style="margin: 0px 0px 2px;">生成器点击音效</div><input type="text" placeholder="https://... 或 ./audio/spawn.ogg" data-chain="gem" data-field="spawnSound" data-section="chainRoot"></div><div class="dp-sub-title">生成器等级素材 (Lv.0~3)</div><div class="dp-col-headers"><span>等级</span><span>名称/标签</span><span>图标 / 图片路径</span></div><div class="dp-item-row"><div class="lv">G0</div><input type="text" placeholder="生成器名称" data-chain="gem" data-idx="0" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="gem" data-idx="0" data-field="icon" data-section="generatorLevels"></div><div class="dp-item-row"><div class="lv">G1</div><input type="text" placeholder="生成器名称" data-chain="gem" data-idx="1" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="gem" data-idx="1" data-field="icon" data-section="generatorLevels"></div><div class="dp-item-row"><div class="lv">G2</div><input type="text" placeholder="生成器名称" data-chain="gem" data-idx="2" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="gem" data-idx="2" data-field="icon" data-section="generatorLevels"></div><div class="dp-item-row"><div class="lv">G3</div><input type="text" placeholder="生成器名称" data-chain="gem" data-idx="3" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="gem" data-idx="3" data-field="icon" data-section="generatorLevels"></div><div class="dp-item-row"><div class="lv">G4</div><input type="text" placeholder="生成器名称" data-chain="gem" data-idx="4" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="gem" data-idx="4" data-field="icon" data-section="generatorLevels"></div><div class="dp-item-row"><div class="lv">G5</div><input type="text" placeholder="生成器名称" data-chain="gem" data-idx="5" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="gem" data-idx="5" data-field="icon" data-section="generatorLevels"></div><div class="dp-sub-title" style="margin-top: 8px;">合成链物品 (Lv.1~6)</div><div class="dp-col-headers"><span>等级</span><span>物品名称</span><span>图标 / 图片路径</span></div><div class="dp-item-row"><div class="lv">Lv1</div><input type="text" placeholder="物品名称" data-chain="gem" data-idx="0" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="gem" data-idx="0" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv2</div><input type="text" placeholder="物品名称" data-chain="gem" data-idx="1" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="gem" data-idx="1" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv3</div><input type="text" placeholder="物品名称" data-chain="gem" data-idx="2" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="gem" data-idx="2" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv4</div><input type="text" placeholder="物品名称" data-chain="gem" data-idx="3" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="gem" data-idx="3" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv5</div><input type="text" placeholder="物品名称" data-chain="gem" data-idx="4" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="gem" data-idx="4" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv6</div><input type="text" placeholder="物品名称" data-chain="gem" data-idx="5" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="gem" data-idx="5" data-field="icon" data-section="items"></div></div><div style="margin-bottom: 14px;"><div class="dp-chain-title">食物类 (food)</div><div class="dp-item-row" style="grid-template-columns: 1fr;"><div class="dp-sub-title" style="margin: 0px 0px 2px;">生成器点击音效</div><input type="text" placeholder="https://... 或 ./audio/spawn.ogg" data-chain="food" data-field="spawnSound" data-section="chainRoot"></div><div class="dp-sub-title">生成器等级素材 (Lv.0~3)</div><div class="dp-col-headers"><span>等级</span><span>名称/标签</span><span>图标 / 图片路径</span></div><div class="dp-item-row"><div class="lv">G0</div><input type="text" placeholder="生成器名称" data-chain="food" data-idx="0" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="food" data-idx="0" data-field="icon" data-section="generatorLevels"></div><div class="dp-item-row"><div class="lv">G1</div><input type="text" placeholder="生成器名称" data-chain="food" data-idx="1" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="food" data-idx="1" data-field="icon" data-section="generatorLevels"></div><div class="dp-item-row"><div class="lv">G2</div><input type="text" placeholder="生成器名称" data-chain="food" data-idx="2" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="food" data-idx="2" data-field="icon" data-section="generatorLevels"></div><div class="dp-item-row"><div class="lv">G3</div><input type="text" placeholder="生成器名称" data-chain="food" data-idx="3" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="food" data-idx="3" data-field="icon" data-section="generatorLevels"></div><div class="dp-item-row"><div class="lv">G4</div><input type="text" placeholder="生成器名称" data-chain="food" data-idx="4" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="food" data-idx="4" data-field="icon" data-section="generatorLevels"></div><div class="dp-item-row"><div class="lv">G5</div><input type="text" placeholder="生成器名称" data-chain="food" data-idx="5" data-field="label" data-section="generatorLevels"><input type="text" placeholder="⚡ 或 ./img/gen1.png" data-chain="food" data-idx="5" data-field="icon" data-section="generatorLevels"></div><div class="dp-sub-title" style="margin-top: 8px;">合成链物品 (Lv.1~6)</div><div class="dp-col-headers"><span>等级</span><span>物品名称</span><span>图标 / 图片路径</span></div><div class="dp-item-row"><div class="lv">Lv1</div><input type="text" placeholder="物品名称" data-chain="food" data-idx="0" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="food" data-idx="0" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv2</div><input type="text" placeholder="物品名称" data-chain="food" data-idx="1" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="food" data-idx="1" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv3</div><input type="text" placeholder="物品名称" data-chain="food" data-idx="2" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="food" data-idx="2" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv4</div><input type="text" placeholder="物品名称" data-chain="food" data-idx="3" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="food" data-idx="3" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv5</div><input type="text" placeholder="物品名称" data-chain="food" data-idx="4" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="food" data-idx="4" data-field="icon" data-section="items"></div><div class="dp-item-row"><div class="lv">Lv6</div><input type="text" placeholder="物品名称" data-chain="food" data-idx="5" data-field="name" data-section="items"><input type="text" placeholder="🍓 或 ./img/a.png" data-chain="food" data-idx="5" data-field="icon" data-section="items"></div></div></div>
     </div>
 
     <div style="display:flex;gap:8px;margin-top:4px;">
@@ -795,19 +887,27 @@
 </div>
 
 <div id="touch-ghost"></div>
-<div id="timesup-overlay">
-    <div class="ts-title">时间到！</div>
-    <div class="ts-score" id="timesup-score"></div>
-    <div id="timesup-leaderboard" class="leaderboard"></div>
-    <button onclick="location.reload()">再来一局</button>
-</div>
+<!-- 开始/读取存档弹窗 -->
 <div id="start-modal">
     <div class="sm-box">
         <div class="sm-title">獭学</div>
         <div class="sm-sub">合并物品，收集胜利点数！</div>
-        <input type="text" id="player-name" placeholder="输入你的名字" maxlength="16"
-            onkeydown="if(event.key==='Enter') startGame()">
-        <button onclick="startGame()">开始游戏</button>
+        <input type="text" id="player-name" placeholder="输入名字开始新游戏" maxlength="16" onkeydown="if(event.key==='Enter') startNewGame()">
+        <button class="sm-btn-primary" onclick="startNewGame()">新游戏</button>
+        <button class="sm-btn-secondary" onclick="toggleStartSlots()">读取存档</button>
+        <div id="sm-save-slots" style="display:none"></div>
+    </div>
+</div>
+<!-- 存档/读取弹窗（游戏中） -->
+<div id="saveload-modal">
+    <div class="sl-box">
+        <div class="sl-title">存档管理</div>
+        <div class="sl-tabs">
+            <button class="sl-tab active" id="sl-tab-save" onclick="switchSLTab('save')">保存游戏</button>
+            <button class="sl-tab" id="sl-tab-load" onclick="switchSLTab('load')">读取存档</button>
+        </div>
+        <div id="sl-slots"></div>
+        <div class="sl-close-row"><button onclick="closeSaveLoad()">关闭</button></div>
     </div>
 </div>
 <div id="victory-overlay">
@@ -834,7 +934,7 @@ const GAME_CONFIG = {
         "energyCostPerClick": 1,
         "mergeSound": "https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg",
         "orderSound": "https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg",
-        "bgmUrl": "https://upload.wikimedia.org/wikipedia/commons/1/1e/Air_%28Bach%29.ogg",
+        "bgmUrl": "https://opengameart.org/sites/default/files/MSTR_-_MSTR_-_Choro_bavario_Loop.mp3",
         "bgmVolume": 0.45,
         "victoryTarget": 513,
         "victoryImage": "https://i.ibb.co/xS45pj8Q/image.png",
@@ -1283,7 +1383,9 @@ function generateOrder(config) {
 
 function renderOrderBar(orders, config, gameInstance) {
     const bar = document.getElementById('order-bar');
-    bar.innerHTML = '<div class="side-label">巴拉订单</div>';
+    const canRefresh = gameInstance.refreshCount > 0;
+    bar.innerHTML = `<div class="side-label">巴拉订单 <span class="order-refresh-remain">(刷新 <b>${gameInstance.refreshCount}</b> 次)</span></div>`;
+
     orders.forEach((order, oi) => {
         const card = document.createElement('div');
         card.className = 'order-card';
@@ -1292,10 +1394,23 @@ function renderOrderBar(orders, config, gameInstance) {
         const fulfillable = canFulfillOrder(order, gameInstance.boardData);
         if (fulfillable) card.classList.add('fulfillable');
 
-        const title = document.createElement('div');
-        title.className = 'order-card-title';
-        title.textContent = `巴拉订单 #${oi + 1}`;
-        card.appendChild(title);
+        // 标题行（含右上角刷新按钮）
+        const titleRow = document.createElement('div');
+        titleRow.className = 'order-card-titlerow';
+        const titleEl = document.createElement('div');
+        titleEl.className = 'order-card-title';
+        titleEl.textContent = `订单 #${oi + 1}`;
+        const refreshBtn = document.createElement('button');
+        refreshBtn.className = 'order-card-refresh' + (canRefresh ? '' : ' disabled');
+        refreshBtn.title = canRefresh ? '刷新此订单' : '没有剩余刷新次数';
+        refreshBtn.textContent = '刷新';
+        refreshBtn.onclick = (e) => {
+            e.stopPropagation();
+            gameInstance.refreshSingleOrder(oi);
+        };
+        titleRow.appendChild(titleEl);
+        titleRow.appendChild(refreshBtn);
+        card.appendChild(titleRow);
 
         const itemsDiv = document.createElement('div');
         itemsDiv.className = 'order-items';
@@ -1360,6 +1475,9 @@ class MergeGame {
 
         // 订单系统：3 个槽位
         this.orders = Array.from({ length: ORDER_SLOTS }, () => generateOrder(this.config));
+        this.refreshCount = 3;
+        this.ordersCompletedCount = 0;
+        this._genDropPool = []; // 伪随机掉落池，每轮4种各一次
 
         this._initBoard();
         this._placeSeedGenerators();
@@ -1600,7 +1718,6 @@ class MergeGame {
 
     /* 提交六级物品：+6 胜利点数 + 100% 掉落对应链条 Lv.0 合成器 */
     submitItem(index) {
-        if (typeof gameTimer !== 'undefined' && gameTimer.isBlocked()) return;
         const data = this.boardData[index];
         if (!data || data.isGenerator) return;
         const maxLevel = this.config.chains[data.type].items.length - 1;
@@ -1660,6 +1777,10 @@ class MergeGame {
         );
         // 重新生成订单（链条可能变化）
         this.orders = Array.from({ length: ORDER_SLOTS }, () => generateOrder(this.config));
+        // 保留刷新计数（配置重载不重置游戏进度）
+        if (this.refreshCount === undefined) { this.refreshCount = 3; this.ordersCompletedCount = 0; }
+        // 链条变化时重置掉落池
+        this._genDropPool = [];
 
         // 重建 DOM（规格可能变）
         this._initBoard();
@@ -1674,8 +1795,7 @@ class MergeGame {
         this.render();
     }
 
-    spawnItem(type, genLevel) {
-        if (typeof gameTimer !== 'undefined' && gameTimer.isBlocked()) return;
+    spawnItem(type, genLevel, fromIndex) {
         if (this.energy < this.config.rules.energyCostPerClick) {
             showToast('电量不足！', '#e74c3c');
             return;
@@ -1690,7 +1810,17 @@ class MergeGame {
             return;
         }
 
-        const targetIndex = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
+        // 找距离合成器最近的空格（曼哈顿距离）
+        const cols = this.config.rules.cols;
+        const fromRow = Math.floor(fromIndex / cols);
+        const fromCol = fromIndex % cols;
+        const targetIndex = emptyIndices.reduce((best, idx) => {
+            const r = Math.floor(idx / cols), c = idx % cols;
+            const d = Math.abs(r - fromRow) + Math.abs(c - fromCol);
+            const br = Math.floor(best / cols), bc = best % cols;
+            const bd = Math.abs(br - fromRow) + Math.abs(bc - fromCol);
+            return d < bd ? idx : best;
+        }, emptyIndices[0]);
 
         // 生成器等级决定出货概率
         // Lv.0: 100% Lv.1
@@ -1735,7 +1865,6 @@ class MergeGame {
     }
 
     onDrop(targetIndex) {
-        if (typeof gameTimer !== 'undefined' && gameTimer.isBlocked()) { this.draggedIndex = null; return; }
         const sourceIndex = this.draggedIndex;
         if (sourceIndex === null || sourceIndex === targetIndex) return;
 
@@ -1817,7 +1946,7 @@ class MergeGame {
                     : `<div class="gen-lv-badge gen-lv-0">Lv.0</div>`;
 
                 itemEl.innerHTML = `${renderIcon(genIcon)}<div class="item-label">${genLabel}</div>${lvBadge}`;
-                cell.onclick = () => this.spawnItem(data.type, data.level);
+                cell.onclick = () => this.spawnItem(data.type, data.level, i);
             } else {
                 const chainCfg = this.config.chains[data.type];
                 if (!chainCfg) return;
@@ -1849,8 +1978,21 @@ class MergeGame {
     }
 
 
+    // 伪随机掉落：把所有链条打乱放入池，每次取一个；池空了就重新洗牌
+    _nextGenDropChain() {
+        if (this._genDropPool.length === 0) {
+            const keys = Object.keys(this.config.chains);
+            // Fisher-Yates 洗牌
+            for (let i = keys.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [keys[i], keys[j]] = [keys[j], keys[i]];
+            }
+            this._genDropPool = keys;
+        }
+        return this._genDropPool.pop();
+    }
+
     fulfillOrder(orderIndex) {
-        if (typeof gameTimer !== 'undefined' && gameTimer.isBlocked()) return;
         const order = this.orders[orderIndex];
         if (!order) return;
         if (!canFulfillOrder(order, this.boardData)) {
@@ -1874,9 +2016,8 @@ class MergeGame {
         // 播放订单完成音效
         playSound(this.config.rules.orderSound);
 
-        // 掉落合成器：2件订单→Lv.0，3件订单→Lv.1
-        const chainKeys = Object.keys(this.config.chains);
-        const dropChain = chainKeys[Math.floor(Math.random() * chainKeys.length)];
+        // 掉落合成器：2件订单→Lv.0，3件订单→Lv.1（伪随机：4种轮一圈再重复）
+        const dropChain = this._nextGenDropChain();
         const dropGenLv = order.reqs.length >= 3 ? 1 : 0;
         const emptyIndices = this.boardData.map((v, i) => v === null ? i : null).filter(v => v !== null);
         let genDropMsg = '';
@@ -1889,12 +2030,30 @@ class MergeGame {
 
         // 生成新订单替换当前槽
         this.orders[orderIndex] = generateOrder(this.config);
-        showToast(`订单完成！+${order.reward} 胜利点数${genDropMsg}`, '#9b59b6');
+        // 每完成3单奖励1次刷新机会
+        this.ordersCompletedCount++;
+        let refreshMsg = '';
+        if (this.ordersCompletedCount % 3 === 0) {
+            this.refreshCount++;
+            refreshMsg = `  获得1次刷新！`;
+        }
+        showToast(`订单完成！+${order.reward} 胜利点数${genDropMsg}${refreshMsg}`, '#9b59b6');
         // 胜利检查
         if (this.coins >= this.config.rules.victoryTarget && !this._victoryTriggered) {
             this._victoryTriggered = true;
             this.showVictory();
         }
+        this.render();
+    }
+
+    refreshSingleOrder(orderIndex) {
+        if (this.refreshCount <= 0) {
+            showToast('没有剩余刷新次数！', '#e74c3c');
+            return;
+        }
+        this.refreshCount--;
+        this.orders[orderIndex] = generateOrder(this.config);
+        showToast(`订单 #${orderIndex + 1} 已刷新！剩余 ${this.refreshCount} 次`, '#3498db');
         this.render();
     }
 
@@ -1967,7 +2126,6 @@ class DevPanel {
         document.getElementById('dp-orderSound').value         = rules.orderSound  || '';
         document.getElementById('dp-bgmUrl').value             = rules.bgmUrl      || '';
         document.getElementById('dp-bgmVolume').value          = rules.bgmVolume   ?? 0.25;
-        document.getElementById('dp-gameDuration').value       = rules.gameDuration  ?? 1800;
         document.getElementById('dp-victoryTarget').value      = rules.victoryTarget || 513;
         document.getElementById('dp-victoryImage').value       = rules.victoryImage || '';
         document.getElementById('dp-victorySound').value       = rules.victorySound || '';
@@ -2119,7 +2277,6 @@ class DevPanel {
         newConfig.rules.orderSound         = document.getElementById('dp-orderSound').value.trim();
         newConfig.rules.bgmUrl             = document.getElementById('dp-bgmUrl').value.trim();
         newConfig.rules.bgmVolume          = parseFloat(document.getElementById('dp-bgmVolume').value) || 0.25;
-        newConfig.rules.gameDuration       = toInt('dp-gameDuration') || 1800;
         newConfig.rules.victoryTarget      = toInt('dp-victoryTarget') || 513;
         newConfig.rules.victoryImage       = document.getElementById('dp-victoryImage').value.trim();
         newConfig.rules.victorySound       = document.getElementById('dp-victorySound').value.trim();
@@ -2167,8 +2324,8 @@ class DevPanel {
             `const GAME_CONFIG = ${cfg};`
         );
         // 还原运行时被 JS 修改的内联样式，确保导出文件初始状态正确
-        html = html.replace(/<div id="start-modal"[^>]*>/,  '<div id="start-modal">');
-        html = html.replace(/<div id="timesup-overlay"[^>]*>/, '<div id="timesup-overlay">');
+        html = html.replace(/<div id="start-modal"[^>]*>/,    '<div id="start-modal">');
+        html = html.replace(/<div id="saveload-modal"[^>]*>/, '<div id="saveload-modal">');
         html = html.replace(/<div id="victory-overlay"[^>]*>/, '<div id="victory-overlay">');
         const replaced = html;
         const blob = new Blob([replaced], { type: 'text/html;charset=utf-8' });
@@ -2192,139 +2349,198 @@ function loadConfig() {
     return GAME_CONFIG;
 }
 /* ─────────────────────────────────────────────
-   排行榜（localStorage）
+   存档系统（localStorage 5槽）
    ───────────────────────────────────────────── */
-const SCORES_KEY = 'taXueScores';
-
-function getScores() {
-    try { return JSON.parse(localStorage.getItem(SCORES_KEY) || '[]'); }
-    catch(e) { return []; }
-}
-
-function saveScore(name, score) {
-    const scores = getScores();
-    const today = new Date().toLocaleDateString('zh-CN', { month:'2-digit', day:'2-digit' });
-    scores.push({ name, score, date: today });
-    scores.sort((a, b) => b.score - a.score);
-    localStorage.setItem(SCORES_KEY, JSON.stringify(scores.slice(0, 10)));
-}
+const SAVES_KEY = 'taXueSaves';
+const SAVE_SLOTS = 5;
 
 let playerName = '玩家';
+let slCurrentTab = 'save'; // 'save' | 'load'
 
-function startGame() {
-    const input = document.getElementById('player-name');
-    const v = input.value.trim();
-    playerName = v || '玩家';
-    document.getElementById('start-modal').style.display = 'none';
-    gameTimer.start();
+function getSaves() {
+    try {
+        const raw = JSON.parse(localStorage.getItem(SAVES_KEY) || 'null');
+        if (Array.isArray(raw)) return raw;
+    } catch(e) {}
+    return Array(SAVE_SLOTS).fill(null);
 }
 
-/* ─────────────────────────────────────────────
-   倒计时管理
-   ───────────────────────────────────────────── */
-class GameTimer {
-    constructor(totalSeconds, onTick, onEnd) {
-        this.remaining = totalSeconds;
-        this.onTick = onTick;
-        this.onEnd = onEnd;
-        this.paused = false;
-        this.ended = false;
-        this.started = false;
-        this._interval = null;
+function writeSaves(saves) {
+    localStorage.setItem(SAVES_KEY, JSON.stringify(saves));
+}
 
-        // 注入遮罩到棋盘
-        this._mask = document.createElement('div');
-        this._mask.id = 'board-mask';
-        document.getElementById('board').appendChild(this._mask);
-        // 初始锁定棋盘，等待玩家确认开始
-        this._mask.classList.add('active');
+function buildSaveData() {
+    const date = new Date().toLocaleDateString('zh-CN', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+    return {
+        name:               playerName,
+        score:              game.coins,
+        date,
+        boardData:          deepClone(game.boardData),
+        energy:             game.energy,
+        coins:              game.coins,
+        orders:             deepClone(game.orders),
+        refreshCount:       game.refreshCount,
+        ordersCompletedCount: game.ordersCompletedCount,
+        submissions:        deepClone(game.submissions),
+        genDropPool:        deepClone(game._genDropPool),
+    };
+}
 
-        // 暂停按钮
-        this._btn = document.getElementById('timer-btn');
-        this._btn.addEventListener('click', () => this.toggle());
+function restoreFromSave(save) {
+    game.boardData          = save.boardData;
+    game.energy             = Math.min(save.energy, game.config.rules.maxEnergy);
+    game.coins              = save.coins;
+    game.orders             = save.orders;
+    game.refreshCount       = save.refreshCount ?? 3;
+    game.ordersCompletedCount = save.ordersCompletedCount ?? 0;
+    game.submissions        = save.submissions || {};
+    game._genDropPool       = save.genDropPool || [];
+    game._victoryTriggered  = false;
+    game._initBoard();
+    game.render();
+}
 
-        this._display = document.getElementById('timer-display');
-        this._render();
-        // 不在构造时启动，等 start() 被调用
+// ── 开始界面 ──────────────────────────────────
+function startNewGame() {
+    const v = document.getElementById('player-name').value.trim();
+    playerName = v || '玩家';
+    document.getElementById('start-modal').style.display = 'none';
+}
+
+function toggleStartSlots() {
+    const el = document.getElementById('sm-save-slots');
+    if (el.style.display === 'none') {
+        renderStartSlots();
+        el.style.display = 'flex';
+    } else {
+        el.style.display = 'none';
     }
+}
 
-    start() {
-        if (this.started) return;
-        this.started = true;
-        this._mask.classList.remove('active');
-        this._start();
-    }
+function renderStartSlots() {
+    const saves = getSaves();
+    const el = document.getElementById('sm-save-slots');
+    el.innerHTML = '';
+    saves.forEach((save, i) => {
+        const div = document.createElement('div');
+        div.className = 'sm-slot' + (save ? '' : ' sm-slot-empty');
+        if (save) {
+            div.innerHTML = `
+                <span class="sm-slot-num">${i + 1}</span>
+                <div class="sm-slot-info">
+                    <div class="sm-slot-name">${escHtml(save.name)}</div>
+                    <div class="sm-slot-meta">${save.score} 分 · ${save.date}</div>
+                </div>`;
+            div.onclick = () => {
+                playerName = save.name;
+                restoreFromSave(save);
+                document.getElementById('start-modal').style.display = 'none';
+            };
+        } else {
+            div.innerHTML = `
+                <span class="sm-slot-num">${i + 1}</span>
+                <div class="sm-slot-info">
+                    <div class="sm-slot-name">空存档</div>
+                </div>`;
+        }
+        el.appendChild(div);
+    });
+}
 
-    _start() {
-        this._interval = setInterval(() => {
-            if (this.paused || this.ended) return;
-            this.remaining--;
-            this._render();
-            this.onTick(this.remaining);
-            if (this.remaining <= 0) {
-                this.ended = true;
-                clearInterval(this._interval);
-                this._mask.classList.add('active');
-                this._btn.disabled = true;
-                this._btn.textContent = '⏹';
-                this.onEnd();
+// ── 游戏中存档弹窗 ────────────────────────────
+function openSaveLoad() {
+    slCurrentTab = 'save';
+    renderSLTabs();
+    renderSLSlots();
+    document.getElementById('saveload-modal').classList.add('show');
+}
+
+function closeSaveLoad() {
+    document.getElementById('saveload-modal').classList.remove('show');
+}
+
+function switchSLTab(tab) {
+    slCurrentTab = tab;
+    renderSLTabs();
+    renderSLSlots();
+}
+
+function renderSLTabs() {
+    document.getElementById('sl-tab-save').classList.toggle('active', slCurrentTab === 'save');
+    document.getElementById('sl-tab-load').classList.toggle('active', slCurrentTab === 'load');
+}
+
+function renderSLSlots() {
+    const saves = getSaves();
+    const container = document.getElementById('sl-slots');
+    container.innerHTML = '';
+    saves.forEach((save, i) => {
+        const div = document.createElement('div');
+        div.className = 'sl-slot' + (save ? '' : ' sl-slot-empty');
+
+        const numEl = `<div class="sl-slot-num">${i + 1}</div>`;
+        const infoEl = save
+            ? `<div class="sl-slot-info">
+                <div class="sl-slot-name">${escHtml(save.name)}</div>
+                <div class="sl-slot-meta">${save.score} 分 · ${save.date}</div>
+               </div>`
+            : `<div class="sl-slot-info">
+                <div class="sl-slot-name">空存档</div>
+               </div>`;
+
+        let actionsEl = '';
+        if (slCurrentTab === 'save') {
+            const label = save ? '覆盖' : '保存';
+            actionsEl = `<div class="sl-slot-actions">
+                <button class="sl-btn sl-btn-action" onclick="doSave(${i})">${label}</button>
+                ${save ? `<button class="sl-btn sl-btn-del" onclick="doDelete(${i})">删</button>` : ''}
+            </div>`;
+        } else {
+            if (save) {
+                actionsEl = `<div class="sl-slot-actions">
+                    <button class="sl-btn sl-btn-action" onclick="doLoad(${i})">读取</button>
+                    <button class="sl-btn sl-btn-del" onclick="doDelete(${i})">删</button>
+                </div>`;
             }
-        }, 1000);
-    }
-
-    _render() {
-        const m = Math.floor(this.remaining / 60).toString().padStart(2, '0');
-        const s = (this.remaining % 60).toString().padStart(2, '0');
-        this._display.textContent = `${m}:${s}`;
-        // 最后60秒变红闪烁
-        if (this.remaining <= 60 && !this.ended) {
-            this._display.classList.add('timer-warning');
-        } else {
-            this._display.classList.remove('timer-warning');
         }
-    }
 
-    toggle() {
-        if (this.ended) return;
-        this.paused = !this.paused;
-        this._btn.textContent = this.paused ? '▶' : '⏸';
-        if (this.paused) {
-            this._mask.classList.add('active');
-        } else {
-            this._mask.classList.remove('active');
-        }
-    }
+        div.innerHTML = numEl + infoEl + actionsEl;
+        container.appendChild(div);
+    });
+}
 
-    isBlocked() {
-        return !this.started || this.paused || this.ended;
-    }
+function doSave(slotIndex) {
+    const saves = getSaves();
+    saves[slotIndex] = buildSaveData();
+    writeSaves(saves);
+    showToast(`已保存到存档 ${slotIndex + 1}`, '#27ae60');
+    renderSLSlots();
+}
+
+function doLoad(slotIndex) {
+    const saves = getSaves();
+    const save = saves[slotIndex];
+    if (!save) return;
+    playerName = save.name;
+    restoreFromSave(save);
+    closeSaveLoad();
+    showToast(`已读取存档 ${slotIndex + 1}：${save.name}`, '#3498db');
+}
+
+function doDelete(slotIndex) {
+    const saves = getSaves();
+    saves[slotIndex] = null;
+    writeSaves(saves);
+    renderSLSlots();
+    showToast(`存档 ${slotIndex + 1} 已删除`, '#e67e22');
+}
+
+function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 const game = new MergeGame(loadConfig());
 const devPanel = new DevPanel(game, GAME_CONFIG);
-
-const gameTimer = new GameTimer(
-    game.config.rules.gameDuration ?? 1800,
-    (remaining) => { /* 每秒回调，可扩展 */ },
-    () => {
-        saveScore(playerName, game.coins);
-        const scores = getScores();
-        const lb = document.getElementById('timesup-leaderboard');
-        lb.innerHTML = '<div class="lb-header">— 排行榜 —</div>' + scores.map((s, i) => {
-            const isCurrent = (s.name === playerName && s.score === game.coins);
-            const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`;
-            return `<div class="lb-row${isCurrent ? ' highlight' : ''}">` +
-                `<span class="lb-rank">${medal}</span>` +
-                `<span class="lb-name">${s.name}</span>` +
-                `<span class="lb-score">${s.score}</span>` +
-                `<span class="lb-date">${s.date}</span>` +
-                `</div>`;
-        }).join('');
-        document.getElementById('timesup-score').textContent =
-            `${playerName}：${game.coins} 胜利点数`;
-        document.getElementById('timesup-overlay').classList.add('show');
-    }
-);
 
 // 屏幕旋转/尺寸变化时重建棋盘布局
 window.addEventListener('resize', () => {
